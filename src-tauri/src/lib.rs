@@ -2,6 +2,7 @@ mod models;
 mod simulation;
 mod commands;
 mod can;
+mod storage;
 
 use std::sync::Arc;
 use simulation::state::SimulationState;
@@ -14,6 +15,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(simulation_state)
         .invoke_handler(tauri::generate_handler![
             commands::start_simulation,
@@ -21,7 +23,12 @@ pub fn run() {
             commands::start_sniffing,
             commands::stop_sniffing,
             commands::get_simulation_status,
-            commands::analyze_current_session
+            commands::analyze_current_session,
+            commands::get_session_history,
+            commands::import_file,
+            commands::save_export_csv,
+            commands::list_sessions,
+            commands::read_session
         ])
         .setup(move |app| {
             let app_handle = app.handle().clone();

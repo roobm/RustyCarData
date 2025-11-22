@@ -78,7 +78,7 @@
 - [ ] T019 [US2] Integrate storage writing into the simulation loop in `src-tauri/src/simulation/mod.rs`
 - [ ] T020 [US2] Implement `get_session_history` Tauri command in `src-tauri/src/commands.rs`
 - [ ] T021 [P] [US2] Create `SessionList` component in `src/components/SessionList.tsx`
-- [ ] T022 [US2] Add "History" tab to main UI in `src/App.tsx`
+- [ ] T022 [US2] Add "History" page to main UI in `src/pages/HistoryPage.tsx`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 

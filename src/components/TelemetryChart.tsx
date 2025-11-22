@@ -2,6 +2,7 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useStore } from '../store/useStore';
 import { Download } from 'lucide-react';
+import { api } from '../services/api';
 
 export const TelemetryChart: React.FC = () => {
   const { history } = useStore();
@@ -12,23 +13,26 @@ export const TelemetryChart: React.FC = () => {
     time: new Date(h.timestamp).toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' })
   }));
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (history.length === 0) return;
 
-    const headers = ['Timestamp', 'RPM', 'Speed', 'CoolantTemp'];
-    const csvContent = [
-      headers.join(','),
-      ...history.map(h => `${new Date(h.timestamp).toISOString()},${h.rpm.toFixed(2)},${h.speed.toFixed(2)},${h.temp.toFixed(2)}`)
-    ].join('\n');
+    try {
+      const headers = ['Timestamp', 'RPM', 'Speed', 'CoolantTemp'];
+      const csvContent = [
+        headers.join(','),
+        ...history.map(h => `${new Date(h.timestamp).toISOString()},${h.rpm.toFixed(2)},${h.speed.toFixed(2)},${h.temp.toFixed(2)}`)
+      ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `telemetry_export_${new Date().toISOString()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Sanitize filename: replace colons with dashes to avoid OS issues
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `telemetry_export_${timestamp}.csv`;
+      
+      const filePath = await api.saveExportCsv(csvContent, filename);
+      alert(`Export saved to: ${filePath}`);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Failed to export CSV. Check console for details.");
+    }
   };
 
   return (
