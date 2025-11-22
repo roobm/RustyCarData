@@ -1,11 +1,19 @@
-import { Dashboard } from "./components/Dashboard";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Layout } from './components/Layout';
+import { DashboardPage } from './pages/DashboardPage';
+import { AnalysisPage } from './pages/AnalysisPage';
 import "./App.css";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-900">
-      <Dashboard />
-    </div>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/analysis" element={<AnalysisPage />} />
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 
