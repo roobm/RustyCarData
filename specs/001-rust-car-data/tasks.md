@@ -22,10 +22,10 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create Tauri project structure using `npm create tauri-app`
-- [ ] T002 [P] Install Rust dependencies (`tokio`, `serde`, `parquet`, `chrono`) in `src-tauri/Cargo.toml`
-- [ ] T003 [P] Install Frontend dependencies (`recharts`, `lucide-react`, `axios`) in `package.json`
-- [ ] T004 Configure Tauri permissions and capabilities in `src-tauri/tauri.conf.json`
+- [x] T001 Create Tauri project structure using `npm create tauri-app`
+- [x] T002 [P] Install Rust dependencies (`tokio`, `serde`, `parquet`, `chrono`) in `src-tauri/Cargo.toml`
+- [x] T003 [P] Install Frontend dependencies (`recharts`, `lucide-react`, `axios`) in `package.json`
+- [x] T004 Configure Tauri permissions and capabilities in `src-tauri/tauri.conf.json`
 
 ---
 
