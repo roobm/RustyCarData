@@ -35,6 +35,20 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
             }
         }
 
+        // Update Stats
+        {
+            let rpm = *state.rpm.lock().unwrap();
+            let speed = *state.speed.lock().unwrap();
+            let mut stats = state.stats.lock().unwrap();
+            
+            if rpm > stats.max_rpm { stats.max_rpm = rpm; }
+            if speed > stats.max_speed { stats.max_speed = speed; }
+            if rpm > 5000.0 { stats.high_rpm_events += 1; }
+            
+            stats.total_rpm += rpm;
+            stats.sample_count += 1;
+        }
+
         // Create telemetry points
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

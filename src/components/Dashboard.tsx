@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { Gauge } from './Gauge';
 import { CanMonitor } from './CanMonitor';
+import { AiAssistant } from './AiAssistant';
 import { useStore } from '../store/useStore';
 import { api, TelemetryPoint } from '../services/api';
 import { Play, Square } from 'lucide-react';
@@ -71,18 +72,29 @@ export const Dashboard: React.FC = () => {
             />
           </div>
 
-          <div className="p-4 bg-gray-800 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2 text-gray-400">System Status</h3>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                <span>{isRunning ? 'Simulation Running' : 'Engine Stopped'}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 bg-gray-800 rounded-lg h-fit">
+              <h3 className="text-lg font-semibold mb-2 text-gray-400">System Status</h3>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                  <span>{isRunning ? 'Simulation Running' : 'Engine Stopped'}</span>
+                </div>
               </div>
+              <div className="mt-4 text-sm text-gray-500">
+                <p>Backend: Rust (Tauri v2)</p>
+                <p>Frontend: React + Tailwind</p>
+                <p>Protocol: Mock OBD-II / CAN</p>
+              </div>
+            </div>
+            
+            <div className="h-[300px]">
+              <AiAssistant />
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-1 h-[500px]">
+        <div className="lg:col-span-1 h-[600px]">
           <CanMonitor />
         </div>
       </div>
