@@ -1,0 +1,3 @@
+# Ignore data directory to prevent rebuilds on file changes
+data/
+target/

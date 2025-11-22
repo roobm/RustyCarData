@@ -1,7 +1,9 @@
-use tauri::State;
+use tauri::{State, AppHandle};
 use std::sync::Arc;
 use crate::simulation::state::SimulationState;
+use crate::storage::manager::SessionManager;
 use serde_json::json;
+use std::path::PathBuf;
 
 #[tauri::command]
 pub fn start_simulation(state: State<'_, Arc<SimulationState>>) {
@@ -34,6 +36,50 @@ pub fn stop_sniffing(state: State<'_, Arc<SimulationState>>) {
 #[tauri::command]
 pub fn get_simulation_status(state: State<'_, Arc<SimulationState>>) -> bool {
     *state.is_running.lock().unwrap()
+}
+
+#[tauri::command]
+pub fn get_session_history(app: AppHandle) -> Vec<String> {
+    let manager = SessionManager::new(&app);
+    manager.list_sessions()
+        .into_iter()
+        .filter_map(|p| p.file_name().map(|s| s.to_string_lossy().into_owned()))
+        .collect()
+}
+
+#[tauri::command]
+pub fn import_file(app: AppHandle, file_path: String) -> Result<String, String> {
+    let manager = SessionManager::new(&app);
+    let path = PathBuf::from(file_path);
+    
+    if !path.exists() {
+        return Err("File does not exist".to_string());
+    }
+
+    match manager.import_csv(path) {
+        Ok(new_path) => Ok(new_path.file_name().unwrap().to_string_lossy().to_string()),
+        Err(e) => Err(format!("Import failed: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub fn save_export_csv(_app: AppHandle, csv_content: String, filename: String) -> Result<String, String> {
+    use std::fs;
+
+    // Use project folder instead of app_data_dir
+    let exports_dir = std::env::current_dir()
+        .map_err(|e| e.to_string())?
+        .join("data")
+        .join("exports");
+
+    if !exports_dir.exists() {
+        fs::create_dir_all(&exports_dir).map_err(|e| e.to_string())?;
+    }
+
+    let file_path = exports_dir.join(&filename);
+    fs::write(&file_path, csv_content).map_err(|e| e.to_string())?;
+
+    Ok(file_path.to_string_lossy().to_string())
 }
 
 #[tauri::command]
@@ -122,4 +168,29 @@ pub async fn analyze_current_session(state: State<'_, Arc<SimulationState>>, api
     }
 
     Ok(report)
+}
+
+#[tauri::command]
+pub fn list_sessions(app: AppHandle) -> Result<Vec<String>, String> {
+    let manager = SessionManager::new(&app);
+    let sessions = manager.list_sessions();
+    
+    Ok(sessions.iter()
+        .filter_map(|p| p.file_name())
+        .map(|n| n.to_string_lossy().to_string())
+        .collect())
+}
+
+#[tauri::command]
+pub fn read_session(app: AppHandle, filename: String) -> Result<String, String> {
+    use std::fs;
+    
+    let manager = SessionManager::new(&app);
+    let session_path = manager.data_dir.join(&filename);
+    
+    if !session_path.exists() {
+        return Err("Session file not found".to_string());
+    }
+    
+    fs::read_to_string(session_path).map_err(|e| e.to_string())
 }

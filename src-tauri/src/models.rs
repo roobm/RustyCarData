@@ -16,6 +16,17 @@ pub enum ObdPid {
     ThrottlePos = 0x11,
 }
 
+impl ObdPid {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ObdPid::EngineRPM => "EngineRPM",
+            ObdPid::VehicleSpeed => "VehicleSpeed",
+            ObdPid::CoolantTemp => "CoolantTemp",
+            ObdPid::ThrottlePos => "ThrottlePos",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TelemetryPoint {
     pub timestamp: u64,

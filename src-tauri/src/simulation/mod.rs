@@ -3,14 +3,43 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 use tokio::time::sleep;
 use crate::models::{ObdPid, TelemetryPoint};
+use crate::storage::manager::SessionManager;
+use crate::storage::writer::ParquetWriter;
 use self::state::SimulationState;
 
 pub mod state;
 
 pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
+    let session_manager = SessionManager::new(&app);
+    let mut current_writer: Option<ParquetWriter> = None;
+    let mut was_running = false;
+
     loop {
         // Check if simulation should run
         let is_running = *state.is_running.lock().unwrap();
+
+        // Handle Start/Stop transitions
+        if is_running && !was_running {
+            // Just started
+            let path = session_manager.create_new_session_path();
+            println!("Starting new session recording: {:?}", path);
+            let mut writer = ParquetWriter::new(path);
+            if let Err(e) = writer.init() {
+                eprintln!("Failed to init parquet writer: {}", e);
+            } else {
+                current_writer = Some(writer);
+            }
+        } else if !is_running && was_running {
+            // Just stopped
+            if let Some(mut writer) = current_writer.take() {
+                println!("Stopping session recording");
+                if let Err(e) = writer.close() {
+                    eprintln!("Failed to close parquet writer: {}", e);
+                }
+            }
+        }
+        was_running = is_running;
+
         if !is_running {
             sleep(Duration::from_millis(100)).await;
             continue;
@@ -81,6 +110,15 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
                 },
             ]
         };
+
+        // Write to disk
+        if let Some(writer) = &mut current_writer {
+            for point in &points {
+                if let Err(e) = writer.write_point(point) {
+                    eprintln!("Failed to write point: {}", e);
+                }
+            }
+        }
 
         // Emit event to frontend
         if let Err(e) = app.emit("telemetry-update", &points) {
