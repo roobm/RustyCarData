@@ -53,13 +53,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Implement `SimulationState` struct to hold current RPM/Speed in `src-tauri/src/simulation/state.rs`
-- [ ] T011 [US1] Implement `run_simulation_loop` function in `src-tauri/src/simulation/mod.rs` to generate random CAN frames
-- [ ] T012 [US1] Implement `start_simulation` and `stop_simulation` Tauri commands in `src-tauri/src/commands.rs`
-- [ ] T013 [US1] Implement `telemetry-update` event emission in `src-tauri/src/simulation/mod.rs`
-- [ ] T014 [P] [US1] Create `Gauge` component in `src/components/Gauge.tsx`
-- [ ] T015 [P] [US1] Create `Dashboard` page in `src/components/Dashboard.tsx`
-- [ ] T016 [US1] Connect Dashboard to `telemetry-update` event in `src/components/Dashboard.tsx`
+- [x] T010 [US1] Implement `SimulationState` struct to hold current RPM/Speed in `src-tauri/src/simulation/state.rs`
+- [x] T011 [US1] Implement `run_simulation_loop` function in `src-tauri/src/simulation/mod.rs` to generate random CAN frames
+- [x] T012 [US1] Implement `start_simulation` and `stop_simulation` Tauri commands in `src-tauri/src/commands.rs`
+- [x] T013 [US1] Implement `telemetry-update` event emission in `src-tauri/src/simulation/mod.rs`
+- [x] T014 [P] [US1] Create `Gauge` component in `src/components/Gauge.tsx`
+- [x] T015 [P] [US1] Create `Dashboard` page in `src/components/Dashboard.tsx`
+- [x] T016 [US1] Connect Dashboard to `telemetry-update` event in `src/components/Dashboard.tsx`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
