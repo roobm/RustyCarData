@@ -35,11 +35,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Create `CanFrame` and `ObdPid` structs in `src-tauri/src/models.rs`
-- [ ] T006 [P] Create `TelemetryPoint` struct in `src-tauri/src/models.rs`
-- [ ] T007 Setup basic Tauri command structure in `src-tauri/src/lib.rs` (or `main.rs` for v1)
-- [ ] T008 [P] Create frontend API client wrapper in `src/services/api.ts` matching `contracts/tauri-api.ts`
-- [ ] T009 Setup global state management (Context or Zustand) in `src/store/useStore.ts`
+- [x] T005 Create `CanFrame` and `ObdPid` structs in `src-tauri/src/models.rs`
+- [x] T006 [P] Create `TelemetryPoint` struct in `src-tauri/src/models.rs`
+- [x] T007 Setup basic Tauri command structure in `src-tauri/src/lib.rs` (or `main.rs` for v1)
+- [x] T008 [P] Create frontend API client wrapper in `src/services/api.ts` matching `contracts/tauri-api.ts`
+- [x] T009 Setup global state management (Context or Zustand) in `src/store/useStore.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
