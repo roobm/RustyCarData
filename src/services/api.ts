@@ -35,7 +35,7 @@ export const api = {
     return await invoke("get_simulation_status");
   },
 
-  analyzeCurrentSession: async (): Promise<string> => {
-    return await invoke("analyze_current_session");
+  analyzeCurrentSession: async (apiKey?: string): Promise<string> => {
+    return await invoke("analyze_current_session", { apiKey });
   },
 };

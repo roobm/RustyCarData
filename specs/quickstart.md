@@ -9,7 +9,6 @@
 1. Clone the repo.
 2. Install frontend dependencies:
    ```bash
-   cd src
    npm install
    ```
 3. Run the app in development mode:

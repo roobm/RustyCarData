@@ -1,7 +1,7 @@
 # Implementation Plan: Rust Car Data Project
 
-**Branch**: `001-rust-car-data` | **Date**: 2025-11-22 | **Spec**: [specs/001-rust-car-data/spec.md](specs/001-rust-car-data/spec.md)
-**Input**: Feature specification from `/specs/001-rust-car-data/spec.md`
+**Branch**: `001-rust-car-data` | **Date**: 2025-11-22 | **Spec**: [specs/system-spec.md](specs/system-spec.md)
+**Input**: Feature specification from `/specs/system-spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
@@ -38,13 +38,15 @@ A Rust-based desktop application to read, simulate, and analyze OBD-II car data.
 ### Documentation (this feature)
 
 ```text
-specs/001-rust-car-data/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+specs/
+├── plan.md              # This file
+├── research.md          # Phase 0 output
+├── data-model.md        # Phase 1 output
+├── quickstart.md        # Phase 1 output
+├── ai-strategy.md       # AI Strategy
+├── tasks.md             # Global tasks
+└── 001-rust-car-data/   # Legacy feature specs
+    └── contracts/
 ```
 
 ### Source Code (repository root)

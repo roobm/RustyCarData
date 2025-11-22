@@ -1,7 +1,7 @@
 # Tasks: Rust Car Data Project
 
-**Input**: Design documents from `/specs/001-rust-car-data/`
-**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
+**Input**: Design documents from `/specs/`
+**Prerequisites**: plan.md (required), system-spec.md (required for user stories), research.md, data-model.md, contracts/
 
 **Tests**: Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
 
