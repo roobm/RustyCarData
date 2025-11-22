@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import { Gauge } from './Gauge';
 import { CanMonitor } from './CanMonitor';
 import { AiAssistant } from './AiAssistant';
+import { TelemetryChart } from './TelemetryChart';
 import { useStore } from '../store/useStore';
 import { api, TelemetryPoint } from '../services/api';
 import { Play, Square } from 'lucide-react';
@@ -70,6 +71,10 @@ export const Dashboard: React.FC = () => {
               unit="°C" 
               color="#10b981" 
             />
+          </div>
+
+          <div className="h-[300px]">
+            <TelemetryChart />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
