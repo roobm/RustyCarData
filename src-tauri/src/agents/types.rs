@@ -47,7 +47,7 @@ pub enum PrivacyLevel {
     CloudRequired,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AgentConfig {
     pub enabled: bool,
     pub verbosity: VerbosityLevel,

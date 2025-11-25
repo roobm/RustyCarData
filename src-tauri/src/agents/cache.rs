@@ -35,7 +35,23 @@ impl AgentCache {
     /// Invalidate all entries for a session
     pub fn invalidate_session(&mut self, session_id: &str) {
         let prefix = format!("{}:", session_id);
-        self.cache.retain(|k, _| !k.starts_with(&prefix));
+        // Collect keys to remove (LruCache doesn't have retain)
+        let keys_to_remove: Vec<String> = self
+            .cache
+            .iter()
+            .filter_map(|(k, _)| {
+                if k.starts_with(&prefix) {
+                    Some(k.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Remove collected keys
+        for key in keys_to_remove {
+            self.cache.pop(&key);
+        }
     }
 
     /// Clear all cache entries
@@ -72,7 +88,9 @@ pub fn generate_cache_key(
 
 /// Hash agent config to detect changes
 fn hash_config(config: &AgentConfig) -> String {
+    // Serialize config to JSON and hash the string representation
+    let config_json = serde_json::to_string(config).unwrap_or_default();
     let mut hasher = DefaultHasher::new();
-    config.hash(&mut hasher);
+    config_json.hash(&mut hasher);
     format!("{:x}", hasher.finish())
 }
