@@ -1,3 +1,4 @@
+mod agents;
 mod models;
 mod simulation;
 mod commands;
