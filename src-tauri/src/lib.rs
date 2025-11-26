@@ -1,3 +1,4 @@
+mod agents;
 mod models;
 mod simulation;
 mod commands;
@@ -6,6 +7,7 @@ mod storage;
 
 use std::sync::Arc;
 use simulation::state::SimulationState;
+use agents::{AgentRegistry, AgentOrchestrator};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -13,10 +15,15 @@ pub fn run() {
     let state_clone = simulation_state.clone();
     let can_state_clone = simulation_state.clone();
 
+    // Initialize agent orchestrator with default agents
+    let registry = AgentRegistry::with_default_agents();
+    let orchestrator = Arc::new(AgentOrchestrator::new(registry));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(simulation_state)
+        .manage(orchestrator)
         .invoke_handler(tauri::generate_handler![
             commands::start_simulation,
             commands::stop_simulation,
@@ -28,7 +35,12 @@ pub fn run() {
             commands::import_file,
             commands::save_export_csv,
             commands::list_sessions,
-            commands::read_session
+            commands::read_session,
+            commands::list_agents,
+            commands::analyze_session_with_agents,
+            commands::get_agent_info,
+            commands::clear_agent_cache,
+            commands::invalidate_session_cache
         ])
         .setup(move |app| {
             let app_handle = app.handle().clone();
