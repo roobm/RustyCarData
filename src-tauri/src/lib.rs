@@ -4,6 +4,7 @@ mod simulation;
 mod commands;
 mod can;
 mod storage;
+mod config;
 
 use std::sync::Arc;
 use simulation::state::SimulationState;
