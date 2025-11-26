@@ -235,4 +235,81 @@ mod tests {
             Some(ObdPid::VehicleSpeed)
         );
     }
+
+    #[test]
+    fn test_all_datasets_load() {
+        // Test that all 3 bundled datasets can be loaded successfully
+        let base_dir = "data/datasets";
+
+        // Check if running from src-tauri or project root
+        let (catalog_path, data_dir) = if Path::new(base_dir).exists() {
+            (Path::new("data/datasets/catalog.json"), base_dir)
+        } else {
+            (Path::new("src-tauri/data/datasets/catalog.json"), "src-tauri/data/datasets")
+        };
+
+        let loader = match DatasetLoader::new(catalog_path, data_dir) {
+            Ok(loader) => loader,
+            Err(e) => {
+                eprintln!("Failed to create dataset loader: {}", e);
+                eprintln!("Tried catalog: {:?}", catalog_path);
+                eprintln!("Tried data dir: {}", data_dir);
+                eprintln!("Current dir: {:?}", std::env::current_dir());
+                panic!("Dataset loader creation failed");
+            }
+        };
+
+        // Expected telemetry points (not CSV rows)
+        // Each row has 27 columns but we only map ~9 PIDs
+        // So: 3853 rows × 9 PIDs = ~34,677 points
+        let datasets = vec![
+            ("city_commute_1", 30000, 40000, "City Commute"),
+            ("highway_drive_1", 20000, 30000, "Highway Driving"),
+            ("mixed_long_1", 25000, 35000, "Extended Mixed"),
+        ];
+
+        for (id, min_points, max_points, name) in datasets {
+            println!("\n=== Testing dataset: {} ===", name);
+
+            // Load dataset
+            let result = loader.load_dataset(id);
+            assert!(
+                result.is_ok(),
+                "Failed to load dataset {}: {:?}",
+                id,
+                result.err()
+            );
+
+            let data = result.unwrap();
+
+            // Verify telemetry point count (individual PID readings, not CSV rows)
+            println!("  Loaded {} telemetry points", data.len());
+            assert!(
+                data.len() >= min_points && data.len() <= max_points,
+                "Telemetry point count out of range for {}: got {}, expected {}-{}",
+                id,
+                data.len(),
+                min_points,
+                max_points
+            );
+
+            // Verify we have telemetry points with valid PIDs
+            assert!(!data.is_empty(), "Dataset {} is empty", id);
+
+            // Check first point has expected PIDs
+            let first_point = &data[0];
+            println!("  First point: {:?} = {}", first_point.pid, first_point.value);
+
+            // Verify we have some common PIDs in the dataset
+            let has_rpm = data.iter().any(|p| p.pid == ObdPid::EngineRPM);
+            let has_speed = data.iter().any(|p| p.pid == ObdPid::VehicleSpeed);
+
+            assert!(has_rpm, "Dataset {} missing EngineRPM data", id);
+            assert!(has_speed, "Dataset {} missing VehicleSpeed data", id);
+
+            println!("  ✅ Dataset {} passed validation", name);
+        }
+
+        println!("\n✅ All 3 datasets loaded successfully!");
+    }
 }

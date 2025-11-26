@@ -41,7 +41,14 @@ pub fn run() {
             commands::analyze_session_with_agents,
             commands::get_agent_info,
             commands::clear_agent_cache,
-            commands::invalidate_session_cache
+            commands::invalidate_session_cache,
+            commands::get_simulation_mode,
+            commands::set_simulation_mode,
+            commands::get_current_dataset,
+            commands::set_current_dataset,
+            commands::get_playback_speed,
+            commands::set_playback_speed,
+            commands::list_datasets
         ])
         .setup(move |app| {
             let app_handle = app.handle().clone();
