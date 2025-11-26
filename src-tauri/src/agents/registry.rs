@@ -18,6 +18,19 @@ impl AgentRegistry {
         }
     }
 
+    /// Create a registry with default P1 agents (Fuel Coach, Safety Advisor, Diagnostic)
+    pub fn with_default_agents() -> Self {
+        use crate::agents::implementations::{
+            DiagnosticAgent, FuelCoachAgent, SafetyAdvisorAgent,
+        };
+
+        let mut registry = Self::new();
+        registry.register(Arc::new(FuelCoachAgent::new()));
+        registry.register(Arc::new(SafetyAdvisorAgent::new()));
+        registry.register(Arc::new(DiagnosticAgent::new()));
+        registry
+    }
+
     /// Register an agent
     pub fn register(&mut self, agent: Arc<dyn AnalysisAgent>) {
         let metadata = agent.metadata();
