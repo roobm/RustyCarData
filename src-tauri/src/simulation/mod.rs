@@ -9,6 +9,7 @@ use self::state::SimulationState;
 
 pub mod state;
 pub mod dataset;
+pub mod playback;
 
 pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
     let session_manager = SessionManager::new(&app);
