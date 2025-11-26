@@ -191,6 +191,60 @@ pub fn read_session(app: AppHandle, filename: String) -> Result<String, String> 
     if !session_path.exists() {
         return Err("Session file not found".to_string());
     }
-    
+
     fs::read_to_string(session_path).map_err(|e| e.to_string())
+}
+
+// ============================================================================
+// Agent Commands
+// ============================================================================
+
+use crate::agents::{AgentOrchestrator, AnalysisResult, AgentMetadata};
+
+/// Get list of all registered agents
+#[tauri::command]
+pub fn list_agents(orchestrator: State<'_, Arc<AgentOrchestrator>>) -> Vec<AgentMetadata> {
+    orchestrator.registry().list()
+}
+
+/// Analyze a session with specific agents
+#[tauri::command]
+pub async fn analyze_session_with_agents(
+    session_id: String,
+    agent_ids: Vec<String>,
+    orchestrator: State<'_, Arc<AgentOrchestrator>>,
+) -> Result<Vec<AnalysisResult>, String> {
+    // TODO: Load session data from session_id
+    // For now, return error indicating session loading not implemented
+    Err(format!("Session analysis not yet integrated. Session ID: {}, Agents: {:?}", session_id, agent_ids))
+}
+
+/// Get agent metadata by ID
+#[tauri::command]
+pub fn get_agent_info(
+    agent_id: String,
+    orchestrator: State<'_, Arc<AgentOrchestrator>>,
+) -> Result<AgentMetadata, String> {
+    orchestrator
+        .registry()
+        .get(&agent_id)
+        .map(|agent| agent.metadata())
+        .map_err(|e| e.to_string())
+}
+
+/// Clear agent analysis cache
+#[tauri::command]
+pub async fn clear_agent_cache(orchestrator: State<'_, Arc<AgentOrchestrator>>) -> Result<(), String> {
+    orchestrator.clear_cache().await;
+    Ok(())
+}
+
+/// Invalidate cache for a specific session
+#[tauri::command]
+pub async fn invalidate_session_cache(
+    session_id: String,
+    orchestrator: State<'_, Arc<AgentOrchestrator>>,
+) -> Result<(), String> {
+    orchestrator.invalidate_cache(&session_id).await;
+    Ok(())
 }
