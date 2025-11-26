@@ -1,0 +1,102 @@
+{
+  "datasets": [
+    {
+      "id": "city_commute_1",
+      "name": "City Commute - Work to Home",
+      "file_path": "city_commute/live1.csv",
+      "vehicle": {
+        "make": "Toyota",
+        "model": "Etios",
+        "year": 2014,
+        "engine": "Gasoline 1.5L"
+      },
+      "session": {
+        "date": "2023-05-15",
+        "location": "City Commute Route",
+        "driving_style": "Mixed city traffic",
+        "conditions": "Normal traffic, stop-and-go"
+      },
+      "quality": {
+        "pids_available": 27,
+        "sample_count": 3853,
+        "sample_rate_hz": 1,
+        "duration_minutes": 64
+      },
+      "description": "Real-world city commute data with stop-and-go traffic patterns. Includes full OBD-II complement of 27 parameters sampled at 1Hz.",
+      "source": "https://github.com/eron93br/carOBD",
+      "license": "Open Source"
+    },
+    {
+      "id": "highway_drive_1",
+      "name": "Highway Driving - High Speed",
+      "file_path": "highway/drive1.csv",
+      "vehicle": {
+        "make": "Toyota",
+        "model": "Etios",
+        "year": 2014,
+        "engine": "Gasoline 1.5L"
+      },
+      "session": {
+        "date": "2023-05-16",
+        "location": "Highway Route",
+        "driving_style": "High-speed cruising",
+        "conditions": "Open highway, steady speed"
+      },
+      "quality": {
+        "pids_available": 27,
+        "sample_count": 2709,
+        "sample_rate_hz": 1,
+        "duration_minutes": 45
+      },
+      "description": "Highway driving session with sustained high speeds and minimal braking. Optimal for fuel efficiency analysis.",
+      "source": "https://github.com/eron93br/carOBD",
+      "license": "Open Source"
+    },
+    {
+      "id": "mixed_long_1",
+      "name": "Extended Mixed Driving",
+      "file_path": "mixed/long1.csv",
+      "vehicle": {
+        "make": "Toyota",
+        "model": "Etios",
+        "year": 2014,
+        "engine": "Gasoline 1.5L"
+      },
+      "session": {
+        "date": "2023-05-17",
+        "location": "Extended Route",
+        "driving_style": "Mixed city and highway",
+        "conditions": "Varied terrain and speeds"
+      },
+      "quality": {
+        "pids_available": 27,
+        "sample_count": 3528,
+        "sample_rate_hz": 1,
+        "duration_minutes": 59
+      },
+      "description": "Long-distance trip combining city and highway driving. Good for comprehensive agent analysis across different driving conditions.",
+      "source": "https://github.com/eron93br/carOBD",
+      "license": "Open Source"
+    }
+  ],
+  "column_mappings": {
+    "ENGINE_RPM ()": "EngineRPM",
+    "VEHICLE_SPEED ()": "VehicleSpeed",
+    "COOLANT_TEMPERATURE ()": "CoolantTemp",
+    "THROTTLE ()": "ThrottlePosition",
+    "ENGINE_LOAD ()": "EngineLoad",
+    "FUEL_TANK ()": "FuelLevel",
+    "INTAKE_AIR_TEMP ()": "IntakeAirTemp",
+    "TIMING_ADVANCE ()": "TimingAdvance",
+    "CONTROL_MODULE_VOLTAGE ()": "BatteryVoltage",
+    "CATALYST_TEMPERATURE_BANK1_SENSOR1 ()": "CatalystTemp1",
+    "CATALYST_TEMPERATURE_BANK1_SENSOR2 ()": "CatalystTemp2"
+  },
+  "notes": [
+    "All datasets are from Toyota Etios 2014 with 27 OBD-II parameters",
+    "Sample rate: 1 Hz (one reading per second)",
+    "Data is real-world driving, not simulated",
+    "Column names include units in parentheses - strip when parsing",
+    "Some values may be 0.0 if sensor not available or vehicle idle"
+  ]
+}
