@@ -1,11 +1,14 @@
 use std::sync::Arc;
 use std::time::Duration;
+use std::path::PathBuf;
 use tauri::{AppHandle, Emitter};
 use tokio::time::sleep;
 use crate::models::{ObdPid, TelemetryPoint};
 use crate::storage::manager::SessionManager;
 use crate::storage::writer::ParquetWriter;
-use self::state::SimulationState;
+use self::state::{SimulationState, SimulationMode};
+use self::dataset::DatasetLoader;
+use self::playback::DatasetPlayback;
 
 pub mod state;
 pub mod dataset;
@@ -15,6 +18,25 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
     let session_manager = SessionManager::new(&app);
     let mut current_writer: Option<ParquetWriter> = None;
     let mut was_running = false;
+
+    // Initialize dataset loader
+    // Use hard-coded path relative to executable for now
+    let data_dir = PathBuf::from("data/datasets");
+    let catalog_path = data_dir.join("catalog.json");
+
+    let loader = match DatasetLoader::new(&catalog_path, "data/datasets") {
+        Ok(l) => {
+            println!("Dataset loader initialized successfully");
+            Some(l)
+        },
+        Err(e) => {
+            eprintln!("Failed to init dataset loader: {}. Falling back to random walk.", e);
+            None
+        }
+    };
+
+    // Load initial dataset if in playback mode
+    let mut playback: Option<DatasetPlayback> = None;
 
     loop {
         // Check if simulation should run
@@ -31,6 +53,27 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
             } else {
                 current_writer = Some(writer);
             }
+
+            // Initialize playback if in playback mode
+            let mode = *state.mode.lock().unwrap();
+            if mode == SimulationMode::Playback {
+                if let Some(ref loader) = loader {
+                    let dataset_id = state.current_dataset.lock().unwrap().clone()
+                        .unwrap_or_else(|| "city_commute_1".to_string());
+
+                    match loader.load_dataset(&dataset_id) {
+                        Ok(data) => {
+                            println!("Loaded dataset '{}' with {} points", dataset_id, data.len());
+                            let mut pb = DatasetPlayback::new(data);
+                            pb.play();
+                            playback = Some(pb);
+                        },
+                        Err(e) => {
+                            eprintln!("Failed to load dataset: {}", e);
+                        }
+                    }
+                }
+            }
         } else if !is_running && was_running {
             // Just stopped
             if let Some(mut writer) = current_writer.take() {
@@ -39,6 +82,7 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
                     eprintln!("Failed to close parquet writer: {}", e);
                 }
             }
+            playback = None;
         }
         was_running = is_running;
 
@@ -47,23 +91,34 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
             continue;
         }
 
-        // Simulate physics (simple random walk for now)
-        {
-            let mut rpm = state.rpm.lock().unwrap();
-            let mut speed = state.speed.lock().unwrap();
-            let mut temp = state.coolant_temp.lock().unwrap();
+        // Determine mode
+        let mode = *state.mode.lock().unwrap();
 
-            // RPM logic: Idle at 800, rev up randomly, drop if too high
-            let change = (rand::random::<f64>() - 0.4) * 100.0;
-            *rpm = (*rpm + change).clamp(800.0, 7000.0);
-
-            // Speed logic: Follows RPM roughly (gear ratio simulation simplified)
-            *speed = (*rpm / 60.0).clamp(0.0, 240.0);
-
-            // Temp logic: Slowly warms up to 90C
-            if *temp < 90.0 {
-                *temp += 0.05;
+        let points = if mode == SimulationMode::Playback && playback.is_some() {
+            // PLAYBACK MODE: Get next frame from dataset
+            if let Some(ref mut pb) = playback {
+                if let Some(frame) = pb.next_frame() {
+                    // Update state from playback data
+                    for point in &frame {
+                        state.update_from_pid(point.pid, point.value);
+                    }
+                    frame
+                } else {
+                    // Playback ended, create empty frame
+                    vec![]
+                }
+            } else {
+                vec![]
             }
+        } else {
+            // RANDOM WALK MODE (fallback)
+            simulate_random_walk(&state)
+        };
+
+        // Skip if no points generated
+        if points.is_empty() {
+            sleep(Duration::from_millis(100)).await;
+            continue;
         }
 
         // Update Stats
@@ -71,47 +126,14 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
             let rpm = *state.rpm.lock().unwrap();
             let speed = *state.speed.lock().unwrap();
             let mut stats = state.stats.lock().unwrap();
-            
+
             if rpm > stats.max_rpm { stats.max_rpm = rpm; }
             if speed > stats.max_speed { stats.max_speed = speed; }
             if rpm > 5000.0 { stats.high_rpm_events += 1; }
-            
+
             stats.total_rpm += rpm;
             stats.sample_count += 1;
         }
-
-        // Create telemetry points
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_micros() as u64;
-
-        let points = {
-            let rpm = *state.rpm.lock().unwrap();
-            let speed = *state.speed.lock().unwrap();
-            let temp = *state.coolant_temp.lock().unwrap();
-
-            vec![
-                TelemetryPoint {
-                    timestamp,
-                    pid: ObdPid::EngineRPM,
-                    value: rpm,
-                    unit: "rpm".to_string(),
-                },
-                TelemetryPoint {
-                    timestamp,
-                    pid: ObdPid::VehicleSpeed,
-                    value: speed,
-                    unit: "km/h".to_string(),
-                },
-                TelemetryPoint {
-                    timestamp,
-                    pid: ObdPid::CoolantTemp,
-                    value: temp,
-                    unit: "°C".to_string(),
-                },
-            ]
-        };
 
         // Write to disk
         if let Some(writer) = &mut current_writer {
@@ -127,7 +149,65 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
             eprintln!("Failed to emit telemetry: {}", e);
         }
 
-        // 100ms update rate (10Hz)
-        sleep(Duration::from_millis(100)).await;
+        // 100ms update rate (10Hz) - adjust for playback speed
+        let speed_multiplier = if mode == SimulationMode::Playback {
+            *state.playback_speed.lock().unwrap()
+        } else {
+            1.0
+        };
+
+        let delay_ms = (100.0 / speed_multiplier).max(10.0) as u64;
+        sleep(Duration::from_millis(delay_ms)).await;
     }
+}
+
+/// Random walk simulation (legacy mode)
+fn simulate_random_walk(state: &SimulationState) -> Vec<TelemetryPoint> {
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_micros() as u64;
+
+    {
+        let mut rpm = state.rpm.lock().unwrap();
+        let mut speed = state.speed.lock().unwrap();
+        let mut temp = state.coolant_temp.lock().unwrap();
+
+        // RPM logic: Idle at 800, rev up randomly, drop if too high
+        let change = (rand::random::<f64>() - 0.4) * 100.0;
+        *rpm = (*rpm + change).clamp(800.0, 7000.0);
+
+        // Speed logic: Follows RPM roughly (gear ratio simulation simplified)
+        *speed = (*rpm / 60.0).clamp(0.0, 240.0);
+
+        // Temp logic: Slowly warms up to 90C
+        if *temp < 90.0 {
+            *temp += 0.05;
+        }
+    }
+
+    let rpm = *state.rpm.lock().unwrap();
+    let speed = *state.speed.lock().unwrap();
+    let temp = *state.coolant_temp.lock().unwrap();
+
+    vec![
+        TelemetryPoint {
+            timestamp,
+            pid: ObdPid::EngineRPM,
+            value: rpm,
+            unit: "rpm".to_string(),
+        },
+        TelemetryPoint {
+            timestamp,
+            pid: ObdPid::VehicleSpeed,
+            value: speed,
+            unit: "km/h".to_string(),
+        },
+        TelemetryPoint {
+            timestamp,
+            pid: ObdPid::CoolantTemp,
+            value: temp,
+            unit: "°C".to_string(),
+        },
+    ]
 }
