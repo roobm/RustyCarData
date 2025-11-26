@@ -103,7 +103,9 @@ impl DatasetLoader {
     /// Load CSV file and convert to telemetry points
     fn load_csv_file(&self, path: &str) -> Result<Vec<TelemetryPoint>, Box<dyn std::error::Error>> {
         let file = File::open(path)?;
-        let mut reader = ReaderBuilder::new().from_reader(file);
+        let mut reader = ReaderBuilder::new()
+            .flexible(true) // Allow variable number of fields per record
+            .from_reader(file);
 
         let headers = reader.headers()?.clone();
         let column_names: Vec<String> = headers
