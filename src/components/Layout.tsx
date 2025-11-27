@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BrainCircuit, Settings } from 'lucide-react';
+import { LayoutDashboard, BrainCircuit, History, Settings } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -37,13 +37,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Link
             to="/analysis"
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-              isActive('/analysis') 
-                ? 'bg-purple-600 text-white' 
+              isActive('/analysis')
+                ? 'bg-purple-600 text-white'
                 : 'text-gray-400 hover:bg-gray-700 hover:text-white'
             }`}
           >
             <BrainCircuit size={20} />
             <span>AI Analysis</span>
+          </Link>
+
+          <Link
+            to="/history"
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              isActive('/history') || location.pathname.startsWith('/history/')
+                ? 'bg-green-600 text-white'
+                : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <History size={20} />
+            <span>Session History</span>
           </Link>
         </nav>
 
