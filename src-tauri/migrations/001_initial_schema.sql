@@ -1,179 +1,189 @@
--- Supabase Database Schema for OBD-II Telemetry System
--- Feature: 010-simulation-improvements
--- Run this in your Supabase SQL Editor
+-- Supabase Database Schema for OBD-II Telemetry Storage
+-- Run this in your Supabase SQL Editor: https://app.supabase.com/project/_/sql
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Sessions table: Stores driving session metadata
+-- ============================================================================
+-- Table: sessions
+-- Stores driving session metadata
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    session_name TEXT NOT NULL,
-    vehicle_info JSONB DEFAULT '{}'::jsonb,
-    start_time TIMESTAMPTZ NOT NULL,
-    end_time TIMESTAMPTZ,
-    duration_seconds INTEGER,
-    distance_miles FLOAT,
-    dataset_source TEXT NOT NULL DEFAULT 'live',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    started_at TIMESTAMPTZ NOT NULL,
+    ended_at TIMESTAMPTZ,
+    
+    -- Session identification
+    session_name VARCHAR(255),
+    dataset_source VARCHAR(100), -- 'playback', 'random_walk', 'imported', 'live'
+    
+    -- Vehicle info (optional)
+    vehicle_make VARCHAR(100),
+    vehicle_model VARCHAR(100),
+    vehicle_year INT,
+    
+    -- Session metadata
+    duration_seconds INT,
+    distance_km DECIMAL(10, 2),
+    
+    -- Indexes for faster queries
+    CONSTRAINT sessions_ended_after_started CHECK (ended_at IS NULL OR ended_at > started_at)
 );
 
--- Add indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_sessions_dataset_source ON sessions(dataset_source);
+CREATE INDEX idx_sessions_created_at ON sessions(created_at DESC);
+CREATE INDEX idx_sessions_dataset_source ON sessions(dataset_source);
 
--- Telemetry points table: Stores individual sensor readings
+-- ============================================================================
+-- Table: telemetry_points
+-- Stores individual OBD-II parameter readings
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS telemetry_points (
     id BIGSERIAL PRIMARY KEY,
     session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-    timestamp BIGINT NOT NULL,
-    pid TEXT NOT NULL,
-    value FLOAT NOT NULL,
-    unit TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- OBD-II Parameters (PIDs)
+    -- Core parameters
+    engine_rpm DECIMAL(10, 2),
+    vehicle_speed DECIMAL(10, 2),
+    coolant_temp DECIMAL(10, 2),
+    
+    -- Extended parameters
+    throttle_position DECIMAL(10, 2),
+    engine_load DECIMAL(10, 2),
+    fuel_level DECIMAL(10, 2),
+    intake_air_temp DECIMAL(10, 2),
+    timing_advance DECIMAL(10, 2),
+    battery_voltage DECIMAL(10, 2),
+    
+    -- Additional sensors (future)
+    maf_flow_rate DECIMAL(10, 2),
+    o2_sensor_voltage DECIMAL(10, 2),
+    fuel_pressure DECIMAL(10, 2),
+    
+    -- Indexes for performance
+    CONSTRAINT telemetry_session_fk FOREIGN KEY (session_id) REFERENCES sessions(id)
 );
 
--- Add indexes for efficient queries
-CREATE INDEX IF NOT EXISTS idx_telemetry_session_id ON telemetry_points(session_id);
-CREATE INDEX IF NOT EXISTS idx_telemetry_session_time ON telemetry_points(session_id, timestamp);
-CREATE INDEX IF NOT EXISTS idx_telemetry_pid ON telemetry_points(pid);
+CREATE INDEX idx_telemetry_session_id ON telemetry_points(session_id);
+CREATE INDEX idx_telemetry_timestamp ON telemetry_points(timestamp DESC);
+CREATE INDEX idx_telemetry_session_timestamp ON telemetry_points(session_id, timestamp);
 
--- Session statistics table: Stores aggregated session metrics
+-- ============================================================================
+-- Table: session_stats
+-- Aggregated statistics per session (for quick access)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS session_stats (
     session_id UUID PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
-    max_rpm FLOAT DEFAULT 0,
-    avg_rpm FLOAT DEFAULT 0,
-    max_speed FLOAT DEFAULT 0,
-    avg_speed FLOAT DEFAULT 0,
-    fuel_consumed FLOAT DEFAULT 0,
-    avg_fuel_efficiency FLOAT DEFAULT 0,
-    hard_braking_events INTEGER DEFAULT 0,
-    rapid_accel_events INTEGER DEFAULT 0,
-    error_codes JSONB DEFAULT '[]'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    
+    -- Aggregated statistics
+    avg_speed DECIMAL(10, 2),
+    max_speed DECIMAL(10, 2),
+    avg_rpm DECIMAL(10, 2),
+    max_rpm DECIMAL(10, 2),
+    avg_coolant_temp DECIMAL(10, 2),
+    max_coolant_temp DECIMAL(10, 2),
+    
+    -- Fuel efficiency
+    avg_throttle_position DECIMAL(10, 2),
+    avg_engine_load DECIMAL(10, 2),
+    fuel_consumed_liters DECIMAL(10, 2),
+    
+    -- Data quality
+    total_points INT NOT NULL DEFAULT 0,
+    missing_values_count INT NOT NULL DEFAULT 0,
+    
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Add index for session lookup
-CREATE INDEX IF NOT EXISTS idx_session_stats_session_id ON session_stats(session_id);
-
+-- ============================================================================
 -- Row Level Security (RLS) Policies
--- Enable RLS on all tables
-ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE telemetry_points ENABLE ROW LEVEL SECURITY;
-ALTER TABLE session_stats ENABLE ROW LEVEL SECURITY;
+-- Optional: Enable if you want user-based access control
+-- ============================================================================
 
--- Policy: Users can view their own sessions
-CREATE POLICY "Users can view own sessions"
-    ON sessions FOR SELECT
-    USING (auth.uid() = user_id OR user_id IS NULL);
+-- Enable RLS on tables (uncomment if needed)
+-- ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE telemetry_points ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE session_stats ENABLE ROW LEVEL SECURITY;
 
--- Policy: Users can insert their own sessions
-CREATE POLICY "Users can insert own sessions"
-    ON sessions FOR INSERT
-    WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+-- Example policy: Users can only see their own sessions
+-- CREATE POLICY "Users can view own sessions" ON sessions
+--     FOR SELECT USING (auth.uid() = user_id);
 
--- Policy: Users can update their own sessions
-CREATE POLICY "Users can update own sessions"
-    ON sessions FOR UPDATE
-    USING (auth.uid() = user_id OR user_id IS NULL);
+-- ============================================================================
+-- Helper Functions
+-- ============================================================================
 
--- Policy: Users can delete their own sessions
-CREATE POLICY "Users can delete own sessions"
-    ON sessions FOR DELETE
-    USING (auth.uid() = user_id OR user_id IS NULL);
+-- Function to calculate session statistics
+CREATE OR REPLACE FUNCTION calculate_session_stats(p_session_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    INSERT INTO session_stats (
+        session_id,
+        avg_speed, max_speed,
+        avg_rpm, max_rpm,
+        avg_coolant_temp, max_coolant_temp,
+        avg_throttle_position, avg_engine_load,
+        total_points
+    )
+    SELECT
+        p_session_id,
+        AVG(vehicle_speed), MAX(vehicle_speed),
+        AVG(engine_rpm), MAX(engine_rpm),
+        AVG(coolant_temp), MAX(coolant_temp),
+        AVG(throttle_position), AVG(engine_load),
+        COUNT(*)
+    FROM telemetry_points
+    WHERE session_id = p_session_id
+    ON CONFLICT (session_id) DO UPDATE SET
+        avg_speed = EXCLUDED.avg_speed,
+        max_speed = EXCLUDED.max_speed,
+        avg_rpm = EXCLUDED.avg_rpm,
+        max_rpm = EXCLUDED.max_rpm,
+        avg_coolant_temp = EXCLUDED.avg_coolant_temp,
+        max_coolant_temp = EXCLUDED.max_coolant_temp,
+        avg_throttle_position = EXCLUDED.avg_throttle_position,
+        avg_engine_load = EXCLUDED.avg_engine_load,
+        total_points = EXCLUDED.total_points,
+        updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql;
 
--- Policy: Users can view telemetry for their sessions
-CREATE POLICY "Users can view own telemetry"
-    ON telemetry_points FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM sessions
-            WHERE sessions.id = telemetry_points.session_id
-            AND (sessions.user_id = auth.uid() OR sessions.user_id IS NULL)
-        )
-    );
+-- ============================================================================
+-- Triggers
+-- ============================================================================
 
--- Policy: Users can insert telemetry for their sessions
-CREATE POLICY "Users can insert own telemetry"
-    ON telemetry_points FOR INSERT
-    WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM sessions
-            WHERE sessions.id = telemetry_points.session_id
-            AND (sessions.user_id = auth.uid() OR sessions.user_id IS NULL)
-        )
-    );
-
--- Policy: Users can view stats for their sessions
-CREATE POLICY "Users can view own stats"
-    ON session_stats FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM sessions
-            WHERE sessions.id = session_stats.session_id
-            AND (sessions.user_id = auth.uid() OR sessions.user_id IS NULL)
-        )
-    );
-
--- Policy: Users can insert/update stats for their sessions
-CREATE POLICY "Users can insert own stats"
-    ON session_stats FOR INSERT
-    WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM sessions
-            WHERE sessions.id = session_stats.session_id
-            AND (sessions.user_id = auth.uid() OR sessions.user_id IS NULL)
-        )
-    );
-
-CREATE POLICY "Users can update own stats"
-    ON session_stats FOR UPDATE
-    USING (
-        EXISTS (
-            SELECT 1 FROM sessions
-            WHERE sessions.id = session_stats.session_id
-            AND (sessions.user_id = auth.uid() OR sessions.user_id IS NULL)
-        )
-    );
-
--- Function: Update updated_at timestamp automatically
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+-- Automatically update session end time when last telemetry point is added
+CREATE OR REPLACE FUNCTION update_session_end_time()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = NOW();
+    UPDATE sessions
+    SET ended_at = NEW.timestamp
+    WHERE id = NEW.session_id
+      AND (ended_at IS NULL OR ended_at < NEW.timestamp);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger: Auto-update sessions.updated_at
-CREATE TRIGGER update_sessions_updated_at
-    BEFORE UPDATE ON sessions
+CREATE TRIGGER trigger_update_session_end_time
+    AFTER INSERT ON telemetry_points
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_session_end_time();
 
--- Trigger: Auto-update session_stats.updated_at
-CREATE TRIGGER update_session_stats_updated_at
-    BEFORE UPDATE ON session_stats
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- ============================================================================
+-- Sample Queries (for reference)
+-- ============================================================================
 
--- Sample data for testing (optional - uncomment to use)
--- INSERT INTO sessions (session_name, vehicle_info, start_time, dataset_source)
--- VALUES (
---     'Test City Commute',
---     '{"make": "Toyota", "model": "Etios", "year": 2014}'::jsonb,
---     NOW() - INTERVAL '1 hour',
---     'bundled'
--- );
+-- Get all sessions with their stats
+-- SELECT s.*, st.*
+-- FROM sessions s
+-- LEFT JOIN session_stats st ON s.id = st.session_id
+-- ORDER BY s.created_at DESC
+-- LIMIT 10;
 
-COMMENT ON TABLE sessions IS 'Stores driving session metadata including vehicle info and timing';
-COMMENT ON TABLE telemetry_points IS 'Individual sensor readings (PIDs) with timestamps';
-COMMENT ON TABLE session_stats IS 'Aggregated statistics for each session';
+-- Get telemetry data for a specific session
+-- SELECT *
+-- FROM telemetry_points
+-- WHERE session_id = 'your-session-id'
+-- ORDER BY timestamp ASC;
 
-COMMENT ON COLUMN sessions.dataset_source IS 'Source of data: bundled, imported, or live';
-COMMENT ON COLUMN telemetry_points.timestamp IS 'Microseconds since UNIX epoch';
-COMMENT ON COLUMN telemetry_points.pid IS 'Parameter ID: EngineRPM, VehicleSpeed, CoolantTemp, etc.';
+-- Calculate stats for a session
+-- SELECT calculate_session_stats('your-session-id');

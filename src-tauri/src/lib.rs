@@ -3,7 +3,7 @@ mod models;
 mod simulation;
 mod commands;
 mod can;
-mod storage;
+pub mod storage;  // Public for binary utilities
 mod config;
 
 use std::sync::Arc;
@@ -12,6 +12,9 @@ use agents::{AgentRegistry, AgentOrchestrator};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Load environment variables from .env file
+    dotenv::dotenv().ok();
+
     let simulation_state = Arc::new(SimulationState::new());
     let state_clone = simulation_state.clone();
     let can_state_clone = simulation_state.clone();

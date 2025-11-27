@@ -4,48 +4,89 @@ use std::env;
 use uuid::Uuid;
 
 /// Supabase client for interacting with cloud database
+#[derive(Clone)]
 pub struct SupabaseClient {
     client: Postgrest,
     anon_key: String,
 }
 
-/// Session record in database
+/// Session record in database (matches 001_initial_schema.sql)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionRow {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<Uuid>,
-    pub user_id: Option<Uuid>,
-    pub session_name: String,
-    pub vehicle_info: serde_json::Value,
-    pub start_time: String,
-    pub end_time: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    pub started_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ended_at: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dataset_source: Option<String>, // 'playback', 'random_walk', 'imported', 'live'
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vehicle_make: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vehicle_model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vehicle_year: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub duration_seconds: Option<i32>,
-    pub distance_miles: Option<f64>,
-    pub dataset_source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub distance_km: Option<f64>,
 }
 
-/// Telemetry point for bulk insert
+/// Telemetry point for bulk insert (matches 001_initial_schema.sql)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TelemetryRow {
     pub session_id: Uuid,
-    pub timestamp: i64,
-    pub pid: String,
-    pub value: f64,
-    pub unit: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<String>,
+    // Core parameters
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub engine_rpm: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vehicle_speed: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub coolant_temp: Option<f64>,
+    // Extended parameters
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub throttle_position: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub engine_load: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuel_level: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub intake_air_temp: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timing_advance: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub battery_voltage: Option<f64>,
+    // Additional sensors (future)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maf_flow_rate: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub o2_sensor_voltage: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuel_pressure: Option<f64>,
 }
 
-/// Session statistics
+/// Session statistics (matches 001_initial_schema.sql)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionStatsRow {
     pub session_id: Uuid,
-    pub max_rpm: Option<f64>,
-    pub avg_rpm: Option<f64>,
-    pub max_speed: Option<f64>,
     pub avg_speed: Option<f64>,
-    pub fuel_consumed: Option<f64>,
-    pub avg_fuel_efficiency: Option<f64>,
-    pub hard_braking_events: Option<i32>,
-    pub rapid_accel_events: Option<i32>,
-    pub error_codes: Option<serde_json::Value>,
+    pub max_speed: Option<f64>,
+    pub avg_rpm: Option<f64>,
+    pub max_rpm: Option<f64>,
+    pub avg_coolant_temp: Option<f64>,
+    pub max_coolant_temp: Option<f64>,
+    pub avg_throttle_position: Option<f64>,
+    pub avg_engine_load: Option<f64>,
+    pub fuel_consumed_liters: Option<f64>,
+    pub total_points: i32,
+    pub missing_values_count: i32,
+    pub updated_at: Option<String>,
 }
 
 impl SupabaseClient {
@@ -68,6 +109,7 @@ impl SupabaseClient {
             .client
             .from("sessions")
             .insert(serde_json::to_string(session)?)
+            .select("*")  // Must explicitly select to get response
             .execute()
             .await?;
 
@@ -80,9 +122,13 @@ impl SupabaseClient {
                     return Ok(id);
                 }
             }
+        } else {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_else(|_| "Unable to read response body".to_string());
+            return Err(format!("Failed to create session: {} - {}", status, body).into());
         }
 
-        Err("Failed to create session".into())
+        Err("Failed to create session: No ID returned".into())
     }
 
     /// Insert telemetry points in batch
@@ -170,11 +216,11 @@ impl SupabaseClient {
     pub async fn complete_session(
         &self,
         id: Uuid,
-        end_time: String,
+        ended_at: String,
         duration_seconds: i32,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let update = serde_json::json!({
-            "end_time": end_time,
+            "ended_at": ended_at,
             "duration_seconds": duration_seconds
         });
 

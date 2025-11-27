@@ -3,9 +3,12 @@ use std::time::Duration;
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter};
 use tokio::time::sleep;
+use chrono::Utc;
+use uuid::Uuid;
 use crate::models::{ObdPid, TelemetryPoint};
 use crate::storage::manager::SessionManager;
 use crate::storage::writer::ParquetWriter;
+use crate::storage::supabase::{SupabaseClient, SessionRow, TelemetryRow};
 use self::state::{SimulationState, SimulationMode};
 use self::dataset::DatasetLoader;
 use self::playback::DatasetPlayback;
@@ -18,6 +21,23 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
     let session_manager = SessionManager::new(&app);
     let mut current_writer: Option<ParquetWriter> = None;
     let mut was_running = false;
+
+    // Initialize Supabase client
+    let supabase_client = match SupabaseClient::new() {
+        Ok(client) => {
+            println!("✅ Supabase client connected successfully");
+            Some(client)
+        },
+        Err(e) => {
+            eprintln!("⚠️  Supabase not configured: {}. Data will only be stored locally.", e);
+            None
+        }
+    };
+
+    // Track current cloud session
+    let mut current_session_id: Option<Uuid> = None;
+    let mut session_start_time: Option<String> = None;
+    let mut telemetry_buffer: Vec<TelemetryRow> = Vec::new();
 
     // Initialize dataset loader
     // Use hard-coded path relative to executable for now
@@ -54,6 +74,38 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
                 current_writer = Some(writer);
             }
 
+            // Create Supabase session
+            if let Some(ref client) = supabase_client {
+                let mode = *state.mode.lock().unwrap();
+                let dataset_id = state.current_dataset.lock().unwrap().clone();
+                let start_time = Utc::now().to_rfc3339();
+                session_start_time = Some(start_time.clone());
+
+                let session = SessionRow {
+                    id: None,
+                    created_at: None,
+                    started_at: start_time,
+                    ended_at: None,
+                    session_name: Some(format!("Session {}", Utc::now().format("%Y-%m-%d %H:%M"))),
+                    dataset_source: Some(if mode == SimulationMode::Playback { "playback" } else { "random_walk" }.to_string()),
+                    vehicle_make: Some("Toyota".to_string()),
+                    vehicle_model: Some("Etios".to_string()),
+                    vehicle_year: Some(2014),
+                    duration_seconds: None,
+                    distance_km: None,
+                };
+
+                match client.create_session(&session).await {
+                    Ok(session_id) => {
+                        current_session_id = Some(session_id);
+                        println!("✅ Created Supabase session: {}", session_id);
+                    },
+                    Err(e) => {
+                        eprintln!("⚠️  Failed to create Supabase session: {}", e);
+                    }
+                }
+            }
+
             // Initialize playback if in playback mode
             let mode = *state.mode.lock().unwrap();
             if mode == SimulationMode::Playback {
@@ -82,6 +134,35 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
                     eprintln!("Failed to close parquet writer: {}", e);
                 }
             }
+
+            // Complete Supabase session
+            if let (Some(ref client), Some(session_id), Some(start_time)) =
+                (&supabase_client, current_session_id, &session_start_time) {
+                // Flush any remaining telemetry
+                if !telemetry_buffer.is_empty() {
+                    if let Err(e) = client.insert_telemetry_batch(&telemetry_buffer).await {
+                        eprintln!("⚠️  Failed to flush telemetry: {}", e);
+                    }
+                    telemetry_buffer.clear();
+                }
+
+                // Calculate duration
+                let end_time = Utc::now();
+                let start = chrono::DateTime::parse_from_rfc3339(&start_time)
+                    .unwrap()
+                    .with_timezone(&Utc);
+                let duration_seconds = (end_time - start).num_seconds() as i32;
+
+                // Update session
+                match client.complete_session(session_id, end_time.to_rfc3339(), duration_seconds).await {
+                    Ok(_) => println!("✅ Completed Supabase session: {}", session_id),
+                    Err(e) => eprintln!("⚠️  Failed to complete session: {}", e),
+                }
+
+                current_session_id = None;
+                session_start_time = None;
+            }
+
             playback = None;
         }
         was_running = is_running;
@@ -141,6 +222,44 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
                 if let Err(e) = writer.write_point(point) {
                     eprintln!("Failed to write point: {}", e);
                 }
+            }
+        }
+
+        // Buffer telemetry for Supabase
+        if let (Some(session_id), Some(ref client)) = (current_session_id, &supabase_client) {
+            // Convert telemetry points to Supabase row format
+            // Collect current state snapshot
+            let telemetry_row = TelemetryRow {
+                session_id,
+                timestamp: None,  // Use database default (NOW())
+                engine_rpm: Some(*state.rpm.lock().unwrap()),
+                vehicle_speed: Some(*state.speed.lock().unwrap()),
+                coolant_temp: Some(*state.coolant_temp.lock().unwrap()),
+                throttle_position: Some(*state.throttle_position.lock().unwrap()),
+                engine_load: Some(*state.engine_load.lock().unwrap()),
+                fuel_level: Some(*state.fuel_level.lock().unwrap()),
+                intake_air_temp: Some(*state.intake_air_temp.lock().unwrap()),
+                timing_advance: Some(*state.timing_advance.lock().unwrap()),
+                battery_voltage: Some(*state.battery_voltage.lock().unwrap()),
+                maf_flow_rate: None,
+                o2_sensor_voltage: None,
+                fuel_pressure: None,
+            };
+
+            telemetry_buffer.push(telemetry_row);
+
+            // Batch insert every 10 points (1 second at 10Hz)
+            if telemetry_buffer.len() >= 10 {
+                let batch = telemetry_buffer.clone();
+                telemetry_buffer.clear();
+
+                // Spawn async task to avoid blocking
+                let client_clone = client.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = client_clone.insert_telemetry_batch(&batch).await {
+                        eprintln!("⚠️  Failed to insert telemetry batch: {}", e);
+                    }
+                });
             }
         }
 
