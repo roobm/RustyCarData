@@ -14,6 +14,13 @@ pub enum ObdPid {
     VehicleSpeed = 0x0D,
     CoolantTemp = 0x05,
     ThrottlePos = 0x11,
+    // New PIDs from real datasets
+    ThrottlePosition = 0x45,
+    EngineLoad = 0x04,
+    FuelLevel = 0x2F,
+    IntakeAirTemp = 0x0F,
+    TimingAdvance = 0x0E,
+    BatteryVoltage = 0x42,
 }
 
 impl ObdPid {
@@ -23,6 +30,12 @@ impl ObdPid {
             ObdPid::VehicleSpeed => "VehicleSpeed",
             ObdPid::CoolantTemp => "CoolantTemp",
             ObdPid::ThrottlePos => "ThrottlePos",
+            ObdPid::ThrottlePosition => "ThrottlePosition",
+            ObdPid::EngineLoad => "EngineLoad",
+            ObdPid::FuelLevel => "FuelLevel",
+            ObdPid::IntakeAirTemp => "IntakeAirTemp",
+            ObdPid::TimingAdvance => "TimingAdvance",
+            ObdPid::BatteryVoltage => "BatteryVoltage",
         }
     }
 }

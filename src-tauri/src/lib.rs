@@ -3,7 +3,8 @@ mod models;
 mod simulation;
 mod commands;
 mod can;
-mod storage;
+pub mod storage;  // Public for binary utilities
+mod config;
 
 use std::sync::Arc;
 use simulation::state::SimulationState;
@@ -11,6 +12,9 @@ use agents::{AgentRegistry, AgentOrchestrator};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Load environment variables from .env file
+    dotenv::dotenv().ok();
+
     let simulation_state = Arc::new(SimulationState::new());
     let state_clone = simulation_state.clone();
     let can_state_clone = simulation_state.clone();
@@ -40,7 +44,14 @@ pub fn run() {
             commands::analyze_session_with_agents,
             commands::get_agent_info,
             commands::clear_agent_cache,
-            commands::invalidate_session_cache
+            commands::invalidate_session_cache,
+            commands::get_simulation_mode,
+            commands::set_simulation_mode,
+            commands::get_current_dataset,
+            commands::set_current_dataset,
+            commands::get_playback_speed,
+            commands::set_playback_speed,
+            commands::list_datasets
         ])
         .setup(move |app| {
             let app_handle = app.handle().clone();

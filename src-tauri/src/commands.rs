@@ -248,3 +248,93 @@ pub async fn invalidate_session_cache(
     orchestrator.invalidate_cache(&session_id).await;
     Ok(())
 }
+
+// ============================================================================
+// Playback Commands
+// ============================================================================
+
+/// Get current simulation mode (Playback or RandomWalk)
+#[tauri::command]
+pub fn get_simulation_mode(state: State<'_, Arc<SimulationState>>) -> String {
+    use crate::simulation::state::SimulationMode;
+    let mode = *state.mode.lock().unwrap();
+    match mode {
+        SimulationMode::Playback => "Playback".to_string(),
+        SimulationMode::RandomWalk => "RandomWalk".to_string(),
+    }
+}
+
+/// Set simulation mode
+#[tauri::command]
+pub fn set_simulation_mode(state: State<'_, Arc<SimulationState>>, mode: String) -> Result<(), String> {
+    use crate::simulation::state::SimulationMode;
+    let mut current_mode = state.mode.lock().unwrap();
+    *current_mode = match mode.as_str() {
+        "Playback" => SimulationMode::Playback,
+        "RandomWalk" => SimulationMode::RandomWalk,
+        _ => return Err("Invalid mode. Use 'Playback' or 'RandomWalk'".to_string()),
+    };
+    Ok(())
+}
+
+/// Get current dataset ID
+#[tauri::command]
+pub fn get_current_dataset(state: State<'_, Arc<SimulationState>>) -> Option<String> {
+    state.current_dataset.lock().unwrap().clone()
+}
+
+/// Set current dataset for playback
+#[tauri::command]
+pub fn set_current_dataset(state: State<'_, Arc<SimulationState>>, dataset_id: String) -> Result<(), String> {
+    let mut current = state.current_dataset.lock().unwrap();
+    *current = Some(dataset_id);
+    Ok(())
+}
+
+/// Get playback speed multiplier
+#[tauri::command]
+pub fn get_playback_speed(state: State<'_, Arc<SimulationState>>) -> f64 {
+    *state.playback_speed.lock().unwrap()
+}
+
+/// Set playback speed (0.1x to 10x)
+#[tauri::command]
+pub fn set_playback_speed(state: State<'_, Arc<SimulationState>>, speed: f64) -> Result<(), String> {
+    if speed < 0.1 || speed > 10.0 {
+        return Err("Speed must be between 0.1 and 10.0".to_string());
+    }
+    let mut current_speed = state.playback_speed.lock().unwrap();
+    *current_speed = speed;
+    Ok(())
+}
+
+/// Get list of available datasets
+#[tauri::command]
+pub fn list_datasets() -> Vec<serde_json::Value> {
+    vec![
+        json!({
+            "id": "city_commute_1",
+            "name": "City Commute - Work to Home",
+            "vehicle": "Toyota Etios 2014",
+            "style": "Stop-and-go traffic",
+            "duration": "64 min",
+            "samples": 3853
+        }),
+        json!({
+            "id": "highway_drive_1",
+            "name": "Highway Driving - High Speed",
+            "vehicle": "Toyota Etios 2014",
+            "style": "Highway cruise",
+            "duration": "45 min",
+            "samples": 2709
+        }),
+        json!({
+            "id": "mixed_long_1",
+            "name": "Extended Mixed Driving",
+            "vehicle": "Toyota Etios 2014",
+            "style": "City and highway mix",
+            "duration": "59 min",
+            "samples": 3528
+        }),
+    ]
+}

@@ -3,6 +3,8 @@ import { listen } from '@tauri-apps/api/event';
 import { Gauge } from '../components/Gauge';
 import { CanMonitor } from '../components/CanMonitor';
 import { TelemetryChart } from '../components/TelemetryChart';
+import { PlaybackControls } from '../components/PlaybackControls';
+import { CarAnimation } from '../components/CarAnimation';
 import { useStore } from '../store/useStore';
 import { api, TelemetryPoint } from '../services/api';
 import { Play, Square } from 'lucide-react';
@@ -37,14 +39,17 @@ export const DashboardPage: React.FC = () => {
         <button
           onClick={toggleSimulation}
           className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
-            isRunning 
-              ? 'bg-red-600 hover:bg-red-700 text-white' 
+            isRunning
+              ? 'bg-red-600 hover:bg-red-700 text-white'
               : 'bg-green-600 hover:bg-green-700 text-white'
           }`}
         >
           {isRunning ? <><Square size={20} /> Stop Engine</> : <><Play size={20} /> Start Engine</>}
         </button>
       </header>
+
+      {/* Playback Controls - Prominent mode indicator */}
+      <PlaybackControls />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
@@ -99,6 +104,9 @@ export const DashboardPage: React.FC = () => {
           <CanMonitor />
         </div>
       </div>
+
+      {/* Car Animation Widget - Fixed bottom-right */}
+      <CarAnimation />
     </div>
   );
 };
