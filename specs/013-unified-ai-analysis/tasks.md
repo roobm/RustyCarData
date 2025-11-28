@@ -19,18 +19,18 @@ Merge AI Analysis and AI Agents pages into a single unified interface where user
 
 ### Tasks
 
-- [ ] T001 Create type definitions file at src/types/analysis.ts
-- [ ] T002 [P] Implement Session types (Session, SessionCard) in src/types/analysis.ts
-- [ ] T003 [P] Implement Agent types (AgentMetadata, SelectableAgent) in src/types/analysis.ts
-- [ ] T004 [P] Implement Analysis types (AnalysisRequest, AgentAnalysisResult, Insight, Recommendation) in src/types/analysis.ts
-- [ ] T005 Create analysisStore with Zustand at src/store/analysisStore.ts
-- [ ] T006 Implement selection state (selectedSessionId, selectedAgentIds) in src/store/analysisStore.ts
-- [ ] T007 Implement analysis state (isAnalyzing, resultsCache, currentResults) in src/store/analysisStore.ts
-- [ ] T008 Implement actions (setSelectedSession, toggleAgent, selectAllAgents, analyze) in src/store/analysisStore.ts
-- [ ] T009 Create analysisService at src/services/analysisService.ts
-- [ ] T010 Implement analyzeSession function calling Tauri 'analyze_session_with_agents' in src/services/analysisService.ts
-- [ ] T011 [P] Create utility functions for session transformation at src/utils/sessionTransform.ts
-- [ ] T012 [P] Create validation utilities at src/utils/validation.ts
+- [X] T001 Create type definitions file at src/types/analysis.ts
+- [X] T002 [P] Implement Session types (Session, SessionCard) in src/types/analysis.ts
+- [X] T003 [P] Implement Agent types (AgentMetadata, SelectableAgent) in src/types/analysis.ts
+- [X] T004 [P] Implement Analysis types (AnalysisRequest, AgentAnalysisResult, Insight, Recommendation) in src/types/analysis.ts
+- [X] T005 Create analysisStore with Zustand at src/store/analysisStore.ts
+- [X] T006 Implement selection state (selectedSessionId, selectedAgentIds) in src/store/analysisStore.ts
+- [X] T007 Implement analysis state (isAnalyzing, resultsCache, currentResults) in src/store/analysisStore.ts
+- [X] T008 Implement actions (setSelectedSession, toggleAgent, selectAllAgents, analyze) in src/store/analysisStore.ts
+- [X] T009 Create analysisService at src/services/analysisService.ts
+- [X] T010 Implement analyzeSession function calling Tauri 'analyze_session_with_agents' in src/services/analysisService.ts
+- [X] T011 [P] Create utility functions for session transformation at src/utils/sessionTransform.ts
+- [X] T012 [P] Create validation utilities at src/utils/validation.ts
 
 **Completion Criteria**:
 - ✅ All types compile without errors
