@@ -203,15 +203,15 @@ Merge AI Analysis and AI Agents pages into a single unified interface where user
 
 ### Tasks
 
-- [ ] T067 [US6] Update route '/analysis' to UnifiedAnalysisPage in src/App.tsx
-- [ ] T068 [US6] Remove route '/agents' from src/App.tsx
-- [ ] T069 [US6] Remove 'AI Agents' navigation link from src/components/Layout.tsx
-- [ ] T070 [US6] Update 'AI Analysis' link to use combined icon in src/components/Layout.tsx
-- [ ] T071 [US6] Delete old AnalysisPage.tsx from src/pages/
-- [ ] T072 [US6] Delete old AgentDashboard.tsx from src/pages/
-- [ ] T073 [US6] Delete old AgentDashboard.css from src/pages/
-- [ ] T074 [US6] Update any remaining imports of deleted pages
-- [ ] T075 [US6] Test all navigation links still work
+- [X] T067 [US6] Update route '/analysis' to UnifiedAnalysisPage in src/App.tsx
+- [X] T068 [US6] Remove route '/agents' from src/App.tsx
+- [X] T069 [US6] Remove 'AI Agents' navigation link from src/components/Layout.tsx
+- [X] T070 [US6] Update 'AI Analysis' link to use combined icon in src/components/Layout.tsx
+- [X] T071 [US6] Delete old AnalysisPage.tsx from src/pages/
+- [X] T072 [US6] Delete old AgentDashboard.tsx from src/pages/
+- [X] T073 [US6] Delete old AgentDashboard.css from src/pages/
+- [X] T074 [US6] Update any remaining imports of deleted pages
+- [X] T075 [US6] Test all navigation links still work
 
 **Independent Test Criteria**:
 - ✅ '/analysis' route displays UnifiedAnalysisPage

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BrainCircuit, History, Settings, Bot } from 'lucide-react';
+import { LayoutDashboard, BrainCircuit, History, Settings } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -44,18 +44,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <BrainCircuit size={20} />
             <span>AI Analysis</span>
-          </Link>
-
-          <Link
-            to="/agents"
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-              isActive('/agents')
-                ? 'bg-indigo-600 text-white'
-                : 'text-gray-400 hover:bg-gray-700 hover:text-white'
-            }`}
-          >
-            <Bot size={20} />
-            <span>AI Agents</span>
           </Link>
 
           <Link
