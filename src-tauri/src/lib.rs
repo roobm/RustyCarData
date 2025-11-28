@@ -4,7 +4,6 @@ mod simulation;
 mod commands;
 mod can;
 pub mod storage;  // Public for binary utilities
-mod config;
 
 use std::sync::Arc;
 use simulation::state::SimulationState;

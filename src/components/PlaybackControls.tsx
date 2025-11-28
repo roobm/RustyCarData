@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Database, Zap, Play, Gauge as GaugeIcon } from 'lucide-react';
+import { Database, Zap, Gauge as GaugeIcon } from 'lucide-react';
 
 interface Dataset {
   id: string;

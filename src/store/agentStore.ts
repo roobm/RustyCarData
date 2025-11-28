@@ -20,7 +20,7 @@ interface AgentState {
   invalidateSessionCache: (sessionId: string) => Promise<void>;
 }
 
-export const useAgentStore = create<AgentState>((set, get) => ({
+export const useAgentStore = create<AgentState>((set) => ({
   // Initial state
   agents: [],
   loadingAgents: false,
