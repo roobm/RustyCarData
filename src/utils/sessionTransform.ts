@@ -1,6 +1,7 @@
 // Session data transformation utilities
 
-import { Session, SessionCard } from '../types/analysis';
+import { Session } from '../types/session';
+import { SessionCard } from '../types/analysis';
 
 /**
  * Transform Session from Supabase to SessionCard for UI display
@@ -28,7 +29,7 @@ export function transformSessionToCard(session: Session): SessionCard {
 /**
  * Format duration in seconds to human-readable string
  */
-function formatDuration(seconds: number | null): string {
+function formatDuration(seconds: number | undefined): string {
   if (!seconds) return 'Unknown';
 
   const mins = Math.floor(seconds / 60);

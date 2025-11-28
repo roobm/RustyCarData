@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Session, SessionCard as SessionCardType } from '../../types/analysis';
+import { Session } from '../../types/session';
+import { SessionCard as SessionCardType } from '../../types/analysis';
 import { SessionCard } from './SessionCard';
 import { transformSessionToCard } from '../../utils/sessionTransform';
 import { AlertCircle, RefreshCw, Download } from 'lucide-react';
@@ -27,7 +28,7 @@ export const SessionSelector: React.FC<SessionSelectorProps> = ({
     setError(null);
 
     try {
-      const rawSessions = await invoke<Session[]>('get_supabase_sessions');
+      const rawSessions = await invoke<Session[]>('list_supabase_sessions', { limit: 50 });
       const transformedSessions = rawSessions.map(transformSessionToCard);
       setSessions(transformedSessions);
     } catch (err) {
