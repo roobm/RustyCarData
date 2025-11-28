@@ -47,17 +47,17 @@ Merge AI Analysis and AI Agents pages into a single unified interface where user
 
 ### Tasks
 
-- [ ] T013 [US1] Create SessionCard component at src/components/analysis/SessionCard.tsx
-- [ ] T014 [US1] Implement SessionCard props interface (session, selected, onClick) in src/components/analysis/SessionCard.tsx
-- [ ] T015 [US1] Add visual selected state (border, background) to SessionCard in src/components/analysis/SessionCard.tsx
-- [ ] T016 [US1] Add keyboard support (Enter/Space) to SessionCard in src/components/analysis/SessionCard.tsx
-- [ ] T017 [US1] Create SessionSelector component at src/components/analysis/SessionSelector.tsx
-- [ ] T018 [US1] Implement session fetching via 'get_supabase_sessions' command in src/components/analysis/SessionSelector.tsx
-- [ ] T019 [US1] Implement card grid layout in SessionSelector in src/components/analysis/SessionSelector.tsx
-- [ ] T020 [US1] Add loading state (skeleton cards) to SessionSelector in src/components/analysis/SessionSelector.tsx
-- [ ] T021 [US1] Add error state with retry button to SessionSelector in src/components/analysis/SessionSelector.tsx
-- [ ] T022 [US1] Add empty state with import CTA to SessionSelector in src/components/analysis/SessionSelector.tsx
-- [ ] T023 [US1] Connect SessionSelector to analysisStore in src/components/analysis/SessionSelector.tsx
+- [X] T013 [US1] Create SessionCard component at src/components/analysis/SessionCard.tsx
+- [X] T014 [US1] Implement SessionCard props interface (session, selected, onClick) in src/components/analysis/SessionCard.tsx
+- [X] T015 [US1] Add visual selected state (border, background) to SessionCard in src/components/analysis/SessionCard.tsx
+- [X] T016 [US1] Add keyboard support (Enter/Space) to SessionCard in src/components/analysis/SessionCard.tsx
+- [X] T017 [US1] Create SessionSelector component at src/components/analysis/SessionSelector.tsx
+- [X] T018 [US1] Implement session fetching via 'get_supabase_sessions' command in src/components/analysis/SessionSelector.tsx
+- [X] T019 [US1] Implement card grid layout in SessionSelector in src/components/analysis/SessionSelector.tsx
+- [X] T020 [US1] Add loading state (skeleton cards) to SessionSelector in src/components/analysis/SessionSelector.tsx
+- [X] T021 [US1] Add error state with retry button to SessionSelector in src/components/analysis/SessionSelector.tsx
+- [X] T022 [US1] Add empty state with import CTA to SessionSelector in src/components/analysis/SessionSelector.tsx
+- [X] T023 [US1] Connect SessionSelector to analysisStore in src/components/analysis/SessionSelector.tsx
 
 **Independent Test Criteria**:
 - ✅ User can see list of sessions as cards
