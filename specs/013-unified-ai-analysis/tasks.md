@@ -228,21 +228,21 @@ Merge AI Analysis and AI Agents pages into a single unified interface where user
 
 ### Tasks
 
-- [ ] T076 [P] Create LoadingSpinner component at src/components/LoadingSpinner.tsx
-- [ ] T077 [P] Create ErrorBanner component at src/components/ErrorBanner.tsx
-- [ ] T078 Add ARIA labels to all interactive elements in SessionCard
-- [ ] T079 Add ARIA labels to all interactive elements in AgentSelector
-- [ ] T080 Add ARIA labels to all interactive elements in AnalyzeButton
-- [ ] T081 Add ARIA labels to all interactive elements in ResultsDisplay
-- [ ] T082 Add ARIA live region for analysis progress announcements in UnifiedAnalysisPage
-- [ ] T083 Implement error boundary for SessionSelector in src/components/analysis/SessionSelector.tsx
-- [ ] T084 Implement error boundary for AgentSelector in src/components/analysis/AgentSelector.tsx
-- [ ] T085 Implement error boundary for ResultsDisplay in src/components/analysis/ResultsDisplay.tsx
-- [ ] T086 Add focus management (move focus to results after analysis) in UnifiedAnalysisPage
-- [ ] T087 [P] Test keyboard navigation through entire workflow
-- [ ] T088 [P] Test screen reader compatibility
-- [ ] T089 [P] Verify color contrast meets WCAG AA standards
-- [ ] T090 [P] Add loading skeletons for session cards during fetch
+- [X] T076 [P] Create LoadingSpinner component at src/components/LoadingSpinner.tsx
+- [X] T077 [P] Create ErrorBanner component at src/components/ErrorBanner.tsx
+- [X] T078 Add ARIA labels to all interactive elements in SessionCard
+- [X] T079 Add ARIA labels to all interactive elements in AgentSelector
+- [X] T080 Add ARIA labels to all interactive elements in AnalyzeButton
+- [X] T081 Add ARIA labels to all interactive elements in ResultsDisplay
+- [X] T082 Add ARIA live region for analysis progress announcements in UnifiedAnalysisPage
+- [X] T083 Implement error boundary for SessionSelector in src/components/analysis/SessionSelector.tsx
+- [X] T084 Implement error boundary for AgentSelector in src/components/analysis/AgentSelector.tsx
+- [X] T085 Implement error boundary for ResultsDisplay in src/components/analysis/ResultsDisplay.tsx
+- [X] T086 Add focus management (move focus to results after analysis) in UnifiedAnalysisPage
+- [X] T087 [P] Test keyboard navigation through entire workflow
+- [X] T088 [P] Test screen reader compatibility
+- [X] T089 [P] Verify color contrast meets WCAG AA standards
+- [X] T090 [P] Add loading skeletons for session cards during fetch
 
 **Completion Criteria**:
 - ✅ All components have proper ARIA labels
