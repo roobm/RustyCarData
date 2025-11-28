@@ -109,13 +109,13 @@ Merge AI Analysis and AI Agents pages into a single unified interface where user
 
 ### Tasks
 
-- [ ] T035 [US3] Create AnalyzeButton component at src/components/analysis/AnalyzeButton.tsx
-- [ ] T036 [US3] Implement dynamic button text based on agent count in src/components/analysis/AnalyzeButton.tsx
-- [ ] T037 [US3] Add disabled state when selection incomplete in src/components/analysis/AnalyzeButton.tsx
-- [ ] T038 [US3] Add loading state with spinner during analysis in src/components/analysis/AnalyzeButton.tsx
-- [ ] T039 [US3] Add tooltip explaining why button is disabled in src/components/analysis/AnalyzeButton.tsx
-- [ ] T040 [US3] Implement onClick handler calling analysisStore.analyze in src/components/analysis/AnalyzeButton.tsx
-- [ ] T041 [US3] Add validation before triggering analysis in src/store/analysisStore.ts analyze action
+- [X] T035 [US3] Create AnalyzeButton component at src/components/analysis/AnalyzeButton.tsx
+- [X] T036 [US3] Implement dynamic button text based on agent count in src/components/analysis/AnalyzeButton.tsx
+- [X] T037 [US3] Add disabled state when selection incomplete in src/components/analysis/AnalyzeButton.tsx
+- [X] T038 [US3] Add loading state with spinner during analysis in src/components/analysis/AnalyzeButton.tsx
+- [X] T039 [US3] Add tooltip explaining why button is disabled in src/components/analysis/AnalyzeButton.tsx
+- [X] T040 [US3] Implement onClick handler calling analysisStore.analyze in src/components/analysis/AnalyzeButton.tsx
+- [X] T041 [US3] Add validation before triggering analysis in src/store/analysisStore.ts analyze action
 
 **Independent Test Criteria**:
 - ✅ Button is disabled when no session selected
