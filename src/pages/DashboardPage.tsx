@@ -1,16 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { Gauge } from '../components/Gauge';
 import { CanMonitor } from '../components/CanMonitor';
 import { TelemetryChart } from '../components/TelemetryChart';
 import { PlaybackControls } from '../components/PlaybackControls';
 import { CarAnimation } from '../components/CarAnimation';
+import SessionNameDialog from '../components/SessionNameDialog';
 import { useStore } from '../store/useStore';
 import { api, TelemetryPoint } from '../services/api';
 import { Play, Square } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const { rpm, speed, coolantTemp, isRunning, setRunning, updateTelemetry } = useStore();
+  const [showNameDialog, setShowNameDialog] = useState(false);
 
   useEffect(() => {
     const unlisten = listen<TelemetryPoint[]>('telemetry-update', (event) => {
@@ -27,14 +29,35 @@ export const DashboardPage: React.FC = () => {
       await api.stopSimulation();
       setRunning(false);
     } else {
-      await api.startSimulation();
-      setRunning(true);
+      // Show dialog to name the session before starting
+      setShowNameDialog(true);
     }
   };
 
+  const handleStartWithName = async (name: string) => {
+    setShowNameDialog(false);
+    await api.startSimulation(name);
+    setRunning(true);
+  };
+
+  const handleStartWithoutName = async () => {
+    setShowNameDialog(false);
+    await api.startSimulation();
+    setRunning(true);
+  };
+
   return (
-    <div className="p-6">
-      <header className="flex justify-between items-center mb-8">
+    <>
+      {/* Session Name Dialog */}
+      {showNameDialog && (
+        <SessionNameDialog
+          onConfirm={handleStartWithName}
+          onCancel={handleStartWithoutName}
+        />
+      )}
+
+      <div className="p-6">
+        <header className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold text-white">Live Telemetry</h2>
         <button
           onClick={toggleSimulation}
@@ -105,8 +128,9 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Car Animation Widget - Fixed bottom-right */}
-      <CarAnimation />
-    </div>
+        {/* Car Animation Widget - Fixed bottom-right */}
+        <CarAnimation />
+      </div>
+    </>
   );
 };

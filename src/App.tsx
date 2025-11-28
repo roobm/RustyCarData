@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { DashboardPage } from './pages/DashboardPage';
 import { AnalysisPage } from './pages/AnalysisPage';
+import SessionHistoryPage from './pages/SessionHistoryPage';
+import SessionDetailPage from './pages/SessionDetailPage';
 import "./App.css";
 
 function App() {
@@ -11,6 +13,8 @@ function App() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />
+          <Route path="/history" element={<SessionHistoryPage />} />
+          <Route path="/history/:sessionId" element={<SessionDetailPage />} />
         </Routes>
       </Layout>
     </Router>

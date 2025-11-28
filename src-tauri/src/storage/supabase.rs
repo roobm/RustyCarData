@@ -266,6 +266,108 @@ impl SupabaseClient {
             Err(format!("Failed to get telemetry: {}", resp.status()).into())
         }
     }
+
+    /// Update session name
+    pub async fn update_session_name(
+        &self,
+        session_id: Uuid,
+        name: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let update = serde_json::json!({
+            "session_name": name
+        });
+
+        let resp = self
+            .client
+            .from("sessions")
+            .eq("id", &session_id.to_string())
+            .update(update.to_string())
+            .execute()
+            .await?;
+
+        if resp.status().is_success() {
+            Ok(())
+        } else {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_else(|_| "Unable to read response body".to_string());
+            Err(format!("Failed to update session name: {} - {}", status, body).into())
+        }
+    }
+
+    /// Delete session and all related data (telemetry points and stats)
+    pub async fn delete_session(
+        &self,
+        session_id: Uuid,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Delete telemetry points first (foreign key constraint)
+        let resp = self
+            .client
+            .from("telemetry_points")
+            .eq("session_id", &session_id.to_string())
+            .delete()
+            .execute()
+            .await?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_else(|_| "Unable to read response body".to_string());
+            return Err(format!("Failed to delete telemetry points: {} - {}", status, body).into());
+        }
+
+        // Delete session stats (if exists)
+        let resp = self
+            .client
+            .from("session_stats")
+            .eq("session_id", &session_id.to_string())
+            .delete()
+            .execute()
+            .await?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_else(|_| "Unable to read response body".to_string());
+            return Err(format!("Failed to delete session stats: {} - {}", status, body).into());
+        }
+
+        // Finally delete the session itself
+        let resp = self
+            .client
+            .from("sessions")
+            .eq("id", &session_id.to_string())
+            .delete()
+            .execute()
+            .await?;
+
+        if resp.status().is_success() {
+            Ok(())
+        } else {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_else(|_| "Unable to read response body".to_string());
+            Err(format!("Failed to delete session: {} - {}", status, body).into())
+        }
+    }
+
+    /// Get session statistics
+    pub async fn get_session_stats(
+        &self,
+        session_id: Uuid,
+    ) -> Result<Option<SessionStatsRow>, Box<dyn std::error::Error>> {
+        let resp = self
+            .client
+            .from("session_stats")
+            .eq("session_id", &session_id.to_string())
+            .select("*")
+            .execute()
+            .await?;
+
+        if resp.status().is_success() {
+            let body = resp.text().await?;
+            let rows: Vec<SessionStatsRow> = serde_json::from_str(&body)?;
+            Ok(rows.into_iter().next())
+        } else {
+            Err(format!("Failed to get session stats: {}", resp.status()).into())
+        }
+    }
 }
 
 #[cfg(test)]

@@ -6,10 +6,18 @@ use serde_json::json;
 use std::path::PathBuf;
 
 #[tauri::command]
-pub fn start_simulation(state: State<'_, Arc<SimulationState>>) {
+pub fn start_simulation(state: State<'_, Arc<SimulationState>>, session_name: Option<String>) {
     let mut is_running = state.is_running.lock().unwrap();
     *is_running = true;
-    println!("Simulation started");
+
+    // Store session name for later use when saving to Supabase
+    if let Some(name) = session_name {
+        let mut session_name_guard = state.session_name.lock().unwrap();
+        *session_name_guard = Some(name.clone());
+        println!("Simulation started with session name: {}", name);
+    } else {
+        println!("Simulation started");
+    }
 }
 
 #[tauri::command]
@@ -337,4 +345,94 @@ pub fn list_datasets() -> Vec<serde_json::Value> {
             "samples": 3528
         }),
     ]
+}
+
+// ============================================================================
+// Supabase Session History Commands
+// ============================================================================
+
+use crate::storage::supabase::{SupabaseClient, SessionRow, TelemetryRow, SessionStatsRow};
+use uuid::Uuid;
+
+/// Combined session data for frontend
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct SessionData {
+    pub session: SessionRow,
+    pub telemetry: Vec<TelemetryRow>,
+    pub stats: Option<SessionStatsRow>,
+}
+
+/// List all sessions from Supabase
+#[tauri::command]
+pub async fn list_supabase_sessions(limit: Option<usize>) -> Result<Vec<SessionRow>, String> {
+    let client = SupabaseClient::new()
+        .map_err(|e| format!("Failed to create Supabase client: {}", e))?;
+
+    let limit = limit.unwrap_or(50);
+    client.list_sessions(limit)
+        .await
+        .map_err(|e| format!("Failed to list sessions: {}", e))
+}
+
+/// Get full session data including telemetry and stats
+#[tauri::command]
+pub async fn get_supabase_session_data(session_id: String) -> Result<SessionData, String> {
+    let client = SupabaseClient::new()
+        .map_err(|e| format!("Failed to create Supabase client: {}", e))?;
+
+    let id = Uuid::parse_str(&session_id)
+        .map_err(|e| format!("Invalid session ID: {}", e))?;
+
+    // Fetch session metadata
+    let session = client.get_session(id)
+        .await
+        .map_err(|e| format!("Failed to get session: {}", e))?
+        .ok_or_else(|| "Session not found".to_string())?;
+
+    // Fetch telemetry data (limit to 10,000 points for UI performance)
+    let telemetry = client.get_session_telemetry(id, Some(10000))
+        .await
+        .map_err(|e| format!("Failed to get telemetry: {}", e))?;
+
+    // Fetch stats (optional, may not exist)
+    let stats = client.get_session_stats(id)
+        .await
+        .map_err(|e| format!("Failed to get stats: {}", e))?;
+
+    Ok(SessionData {
+        session,
+        telemetry,
+        stats,
+    })
+}
+
+/// Update session name
+#[tauri::command]
+pub async fn update_supabase_session_name(
+    session_id: String,
+    name: String,
+) -> Result<(), String> {
+    let client = SupabaseClient::new()
+        .map_err(|e| format!("Failed to create Supabase client: {}", e))?;
+
+    let id = Uuid::parse_str(&session_id)
+        .map_err(|e| format!("Invalid session ID: {}", e))?;
+
+    client.update_session_name(id, name)
+        .await
+        .map_err(|e| format!("Failed to update session name: {}", e))
+}
+
+/// Delete session and all related data
+#[tauri::command]
+pub async fn delete_supabase_session(session_id: String) -> Result<(), String> {
+    let client = SupabaseClient::new()
+        .map_err(|e| format!("Failed to create Supabase client: {}", e))?;
+
+    let id = Uuid::parse_str(&session_id)
+        .map_err(|e| format!("Invalid session ID: {}", e))?;
+
+    client.delete_session(id)
+        .await
+        .map_err(|e| format!("Failed to delete session: {}", e))
 }

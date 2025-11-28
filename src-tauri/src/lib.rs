@@ -51,7 +51,11 @@ pub fn run() {
             commands::set_current_dataset,
             commands::get_playback_speed,
             commands::set_playback_speed,
-            commands::list_datasets
+            commands::list_datasets,
+            commands::list_supabase_sessions,
+            commands::get_supabase_session_data,
+            commands::update_supabase_session_name,
+            commands::delete_supabase_session
         ])
         .setup(move |app| {
             let app_handle = app.handle().clone();
