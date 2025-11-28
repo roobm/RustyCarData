@@ -6,12 +6,14 @@ interface AgentCardProps {
   agent: AgentMetadata;
   selected?: boolean;
   onSelect?: (agentId: string) => void;
+  showCheckbox?: boolean; // NEW: Enable checkbox mode
 }
 
 export const AgentCard: React.FC<AgentCardProps> = ({
   agent,
   selected = false,
   onSelect,
+  showCheckbox = false,
 }) => {
   const handleClick = () => {
     if (onSelect) {
@@ -57,6 +59,16 @@ export const AgentCard: React.FC<AgentCardProps> = ({
       tabIndex={onSelect ? 0 : undefined}
     >
       <div className="agent-card-header">
+        {showCheckbox && (
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={handleClick}
+            onClick={(e) => e.stopPropagation()}
+            className="agent-checkbox"
+            aria-label={`Select ${agent.name}`}
+          />
+        )}
         <div className="agent-icon">{agent.icon}</div>
         <div className="agent-info">
           <h3 className="agent-name">{agent.name}</h3>

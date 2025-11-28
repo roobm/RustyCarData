@@ -78,17 +78,17 @@ Merge AI Analysis and AI Agents pages into a single unified interface where user
 
 ### Tasks
 
-- [ ] T024 [US2] Modify existing AgentCard component at src/components/AgentCard.tsx
-- [ ] T025 [US2] Add showCheckbox prop to AgentCard in src/components/AgentCard.tsx
-- [ ] T026 [US2] Implement checkbox visual state in AgentCard in src/components/AgentCard.tsx
-- [ ] T027 [US2] Create AgentSelector component at src/components/analysis/AgentSelector.tsx
-- [ ] T028 [US2] Implement agent grid layout with checkboxes in src/components/analysis/AgentSelector.tsx
-- [ ] T029 [US2] Add "Select All" / "Deselect All" toggle in src/components/analysis/AgentSelector.tsx
-- [ ] T030 [US2] Display selection count in src/components/analysis/AgentSelector.tsx
-- [ ] T031 [US2] Connect AgentSelector to agentStore (fetch agents) in src/components/analysis/AgentSelector.tsx
-- [ ] T032 [US2] Connect AgentSelector to analysisStore (selection state) in src/components/analysis/AgentSelector.tsx
-- [ ] T033 [US2] Add loading state to AgentSelector in src/components/analysis/AgentSelector.tsx
-- [ ] T034 [US2] Add error state with retry to AgentSelector in src/components/analysis/AgentSelector.tsx
+- [X] T024 [US2] Modify existing AgentCard component at src/components/AgentCard.tsx
+- [X] T025 [US2] Add showCheckbox prop to AgentCard in src/components/AgentCard.tsx
+- [X] T026 [US2] Implement checkbox visual state in AgentCard in src/components/AgentCard.tsx
+- [X] T027 [US2] Create AgentSelector component at src/components/analysis/AgentSelector.tsx
+- [X] T028 [US2] Implement agent grid layout with checkboxes in src/components/analysis/AgentSelector.tsx
+- [X] T029 [US2] Add "Select All" / "Deselect All" toggle in src/components/analysis/AgentSelector.tsx
+- [X] T030 [US2] Display selection count in src/components/analysis/AgentSelector.tsx
+- [X] T031 [US2] Connect AgentSelector to agentStore (fetch agents) in src/components/analysis/AgentSelector.tsx
+- [X] T032 [US2] Connect AgentSelector to analysisStore (selection state) in src/components/analysis/AgentSelector.tsx
+- [X] T033 [US2] Add loading state to AgentSelector in src/components/analysis/AgentSelector.tsx
+- [X] T034 [US2] Add error state with retry to AgentSelector in src/components/analysis/AgentSelector.tsx
 
 **Independent Test Criteria**:
 - ✅ User can see grid of available agents
