@@ -103,7 +103,7 @@ async fn import_session(
             timestamp,
             pid,
             value,
-            unit,
+            _unit: unit,
         });
     }
 
