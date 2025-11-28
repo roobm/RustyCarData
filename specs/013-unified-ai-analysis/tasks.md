@@ -136,19 +136,19 @@ Merge AI Analysis and AI Agents pages into a single unified interface where user
 
 ### Tasks
 
-- [ ] T042 [US4] Create AgentResultCard component at src/components/analysis/AgentResultCard.tsx
-- [ ] T043 [US4] Implement collapsible card UI in AgentResultCard in src/components/analysis/AgentResultCard.tsx
-- [ ] T044 [US4] Add header section (agent name, score, timestamp) to AgentResultCard in src/components/analysis/AgentResultCard.tsx
-- [ ] T045 [US4] Add insights section grouped by type (critical, warning, positive) in AgentResultCard in src/components/analysis/AgentResultCard.tsx
-- [ ] T046 [US4] Add recommendations section sorted by priority in AgentResultCard in src/components/analysis/AgentResultCard.tsx
-- [ ] T047 [US4] Add error state if agent analysis failed in AgentResultCard in src/components/analysis/AgentResultCard.tsx
-- [ ] T048 [US4] Create ResultsDisplay component at src/components/analysis/ResultsDisplay.tsx
-- [ ] T049 [US4] Map results array to AgentResultCards in src/components/analysis/ResultsDisplay.tsx
-- [ ] T050 [US4] Add empty state when no results in src/components/analysis/ResultsDisplay.tsx
-- [ ] T051 [US4] Add loading state during analysis in src/components/analysis/ResultsDisplay.tsx
-- [ ] T052 [US4] Add error banner with retry in src/components/analysis/ResultsDisplay.tsx
-- [ ] T053 [US4] Implement auto-scroll to results on completion in src/components/analysis/ResultsDisplay.tsx
-- [ ] T054 [US4] Add clear results action in src/components/analysis/ResultsDisplay.tsx
+- [X] T042 [US4] Create AgentResultCard component at src/components/analysis/AgentResultCard.tsx
+- [X] T043 [US4] Implement collapsible card UI in AgentResultCard in src/components/analysis/AgentResultCard.tsx
+- [X] T044 [US4] Add header section (agent name, score, timestamp) to AgentResultCard in src/components/analysis/AgentResultCard.tsx
+- [X] T045 [US4] Add insights section grouped by type (critical, warning, positive) in AgentResultCard in src/components/analysis/AgentResultCard.tsx
+- [X] T046 [US4] Add recommendations section sorted by priority in AgentResultCard in src/components/analysis/AgentResultCard.tsx
+- [X] T047 [US4] Add error state if agent analysis failed in AgentResultCard in src/components/analysis/AgentResultCard.tsx
+- [X] T048 [US4] Create ResultsDisplay component at src/components/analysis/ResultsDisplay.tsx
+- [X] T049 [US4] Map results array to AgentResultCards in src/components/analysis/ResultsDisplay.tsx
+- [X] T050 [US4] Add empty state when no results in src/components/analysis/ResultsDisplay.tsx
+- [X] T051 [US4] Add loading state during analysis in src/components/analysis/ResultsDisplay.tsx
+- [X] T052 [US4] Add error banner with retry in src/components/analysis/ResultsDisplay.tsx
+- [X] T053 [US4] Implement auto-scroll to results on completion in src/components/analysis/ResultsDisplay.tsx
+- [X] T054 [US4] Add clear results action in src/components/analysis/ResultsDisplay.tsx
 
 **Independent Test Criteria**:
 - ✅ Results display after analysis completes
