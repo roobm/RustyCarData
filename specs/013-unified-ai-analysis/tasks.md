@@ -171,18 +171,18 @@ Merge AI Analysis and AI Agents pages into a single unified interface where user
 
 ### Tasks
 
-- [ ] T055 [P] [US5] Create CollapsibleSection utility component at src/components/analysis/CollapsibleSection.tsx
-- [ ] T056 [P] [US5] Add expand/collapse animation to CollapsibleSection in src/components/analysis/CollapsibleSection.tsx
-- [ ] T057 [P] [US5] Add keyboard support (Enter to toggle) to CollapsibleSection in src/components/analysis/CollapsibleSection.tsx
-- [ ] T058 [US5] Create UnifiedAnalysisPage at src/pages/UnifiedAnalysisPage.tsx
-- [ ] T059 [US5] Add SessionSelector in collapsible section to UnifiedAnalysisPage in src/pages/UnifiedAnalysisPage.tsx
-- [ ] T060 [US5] Add AgentSelector in collapsible section to UnifiedAnalysisPage in src/pages/UnifiedAnalysisPage.tsx
-- [ ] T061 [US5] Add AnalyzeButton between selection and results in src/pages/UnifiedAnalysisPage.tsx
-- [ ] T062 [US5] Add ResultsDisplay in collapsible section to UnifiedAnalysisPage in src/pages/UnifiedAnalysisPage.tsx
-- [ ] T063 [US5] Implement section expand/collapse state management in src/pages/UnifiedAnalysisPage.tsx
-- [ ] T064 [US5] Auto-expand results section after analysis in src/pages/UnifiedAnalysisPage.tsx
-- [ ] T065 [US5] Auto-collapse selection sections after analysis in src/pages/UnifiedAnalysisPage.tsx
-- [ ] T066 [US5] Add page header with title and subtitle in src/pages/UnifiedAnalysisPage.tsx
+- [X] T055 [P] [US5] Create CollapsibleSection utility component at src/components/analysis/CollapsibleSection.tsx
+- [X] T056 [P] [US5] Add expand/collapse animation to CollapsibleSection in src/components/analysis/CollapsibleSection.tsx
+- [X] T057 [P] [US5] Add keyboard support (Enter to toggle) to CollapsibleSection in src/components/analysis/CollapsibleSection.tsx
+- [X] T058 [US5] Create UnifiedAnalysisPage at src/pages/UnifiedAnalysisPage.tsx
+- [X] T059 [US5] Add SessionSelector in collapsible section to UnifiedAnalysisPage in src/pages/UnifiedAnalysisPage.tsx
+- [X] T060 [US5] Add AgentSelector in collapsible section to UnifiedAnalysisPage in src/pages/UnifiedAnalysisPage.tsx
+- [X] T061 [US5] Add AnalyzeButton between selection and results in src/pages/UnifiedAnalysisPage.tsx
+- [X] T062 [US5] Add ResultsDisplay in collapsible section to UnifiedAnalysisPage in src/pages/UnifiedAnalysisPage.tsx
+- [X] T063 [US5] Implement section expand/collapse state management in src/pages/UnifiedAnalysisPage.tsx
+- [X] T064 [US5] Auto-expand results section after analysis in src/pages/UnifiedAnalysisPage.tsx
+- [X] T065 [US5] Auto-collapse selection sections after analysis in src/pages/UnifiedAnalysisPage.tsx
+- [X] T066 [US5] Add page header with title and subtitle in src/pages/UnifiedAnalysisPage.tsx
 
 **Independent Test Criteria**:
 - ✅ Page displays all three sections (sessions, agents, results)
