@@ -104,3 +104,122 @@ impl SimulationState {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::ObdPid;
+
+    #[test]
+    fn test_simulation_state_new() {
+        let state = SimulationState::new();
+
+        assert_eq!(*state.rpm.lock().unwrap(), 0.0);
+        assert_eq!(*state.speed.lock().unwrap(), 0.0);
+        assert_eq!(*state.coolant_temp.lock().unwrap(), 20.0);
+        assert_eq!(*state.throttle_position.lock().unwrap(), 0.0);
+        assert_eq!(*state.engine_load.lock().unwrap(), 0.0);
+        assert_eq!(*state.fuel_level.lock().unwrap(), 100.0);
+        assert_eq!(*state.intake_air_temp.lock().unwrap(), 20.0);
+        assert_eq!(*state.timing_advance.lock().unwrap(), 0.0);
+        assert_eq!(*state.battery_voltage.lock().unwrap(), 12.6);
+        assert_eq!(*state.is_running.lock().unwrap(), false);
+        assert_eq!(*state.is_sniffing.lock().unwrap(), false);
+        assert_eq!(*state.mode.lock().unwrap(), SimulationMode::Playback);
+        assert_eq!(*state.playback_speed.lock().unwrap(), 1.0);
+        assert_eq!(*state.session_name.lock().unwrap(), None);
+    }
+
+    #[test]
+    fn test_session_stats_new() {
+        let stats = SessionStats::new();
+
+        assert_eq!(stats.max_rpm, 0.0);
+        assert_eq!(stats.max_speed, 0.0);
+        assert_eq!(stats.total_rpm, 0.0);
+        assert_eq!(stats.sample_count, 0);
+        assert_eq!(stats.high_rpm_events, 0);
+    }
+
+    #[test]
+    fn test_update_from_pid_rpm() {
+        let state = SimulationState::new();
+
+        state.update_from_pid(ObdPid::EngineRPM, 3000.0);
+
+        assert_eq!(*state.rpm.lock().unwrap(), 3000.0);
+    }
+
+    #[test]
+    fn test_update_from_pid_speed() {
+        let state = SimulationState::new();
+
+        state.update_from_pid(ObdPid::VehicleSpeed, 120.5);
+
+        assert_eq!(*state.speed.lock().unwrap(), 120.5);
+    }
+
+    #[test]
+    fn test_update_from_pid_coolant_temp() {
+        let state = SimulationState::new();
+
+        state.update_from_pid(ObdPid::CoolantTemp, 90.0);
+
+        assert_eq!(*state.coolant_temp.lock().unwrap(), 90.0);
+    }
+
+    #[test]
+    fn test_update_from_pid_throttle() {
+        let state = SimulationState::new();
+
+        state.update_from_pid(ObdPid::ThrottlePosition, 75.5);
+
+        assert_eq!(*state.throttle_position.lock().unwrap(), 75.5);
+    }
+
+    #[test]
+    fn test_update_from_pid_engine_load() {
+        let state = SimulationState::new();
+
+        state.update_from_pid(ObdPid::EngineLoad, 45.2);
+
+        assert_eq!(*state.engine_load.lock().unwrap(), 45.2);
+    }
+
+    #[test]
+    fn test_update_from_pid_fuel_level() {
+        let state = SimulationState::new();
+
+        state.update_from_pid(ObdPid::FuelLevel, 65.0);
+
+        assert_eq!(*state.fuel_level.lock().unwrap(), 65.0);
+    }
+
+    #[test]
+    fn test_update_from_pid_battery_voltage() {
+        let state = SimulationState::new();
+
+        state.update_from_pid(ObdPid::BatteryVoltage, 14.2);
+
+        assert_eq!(*state.battery_voltage.lock().unwrap(), 14.2);
+    }
+
+    #[test]
+    fn test_simulation_mode_equality() {
+        assert_eq!(SimulationMode::Playback, SimulationMode::Playback);
+        assert_eq!(SimulationMode::RandomWalk, SimulationMode::RandomWalk);
+        assert_ne!(SimulationMode::Playback, SimulationMode::RandomWalk);
+    }
+
+    #[test]
+    fn test_multiple_updates() {
+        let state = SimulationState::new();
+
+        state.update_from_pid(ObdPid::EngineRPM, 1000.0);
+        state.update_from_pid(ObdPid::VehicleSpeed, 50.0);
+        state.update_from_pid(ObdPid::EngineRPM, 2000.0);
+
+        assert_eq!(*state.rpm.lock().unwrap(), 2000.0);
+        assert_eq!(*state.speed.lock().unwrap(), 50.0);
+    }
+}
