@@ -15,8 +15,8 @@ export interface CanFrame {
 }
 
 export const api = {
-  startSimulation: async (): Promise<void> => {
-    return await invoke("start_simulation");
+  startSimulation: async (sessionName?: string): Promise<void> => {
+    return await invoke("start_simulation", { sessionName });
   },
 
   stopSimulation: async (): Promise<void> => {

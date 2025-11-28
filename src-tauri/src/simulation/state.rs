@@ -52,6 +52,9 @@ pub struct SimulationState {
     pub current_dataset: Mutex<Option<String>>,
     pub playback_speed: Mutex<f64>,
 
+    // Session metadata
+    pub session_name: Mutex<Option<String>>,
+
     // Statistics
     pub stats: Mutex<SessionStats>,
 }
@@ -76,6 +79,8 @@ impl SimulationState {
             mode: Mutex::new(SimulationMode::Playback),
             current_dataset: Mutex::new(Some("city_commute_1".to_string())),
             playback_speed: Mutex::new(1.0),
+
+            session_name: Mutex::new(None),
 
             stats: Mutex::new(SessionStats::new()),
         }

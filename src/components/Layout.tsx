@@ -17,7 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
         <div className="p-6 border-b border-gray-700">
           <h1 className="text-2xl font-bold text-blue-400 flex items-center gap-2">
-            CarData
+            RustyAssCarData
           </h1>
         </div>
 

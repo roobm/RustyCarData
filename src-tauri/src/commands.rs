@@ -6,10 +6,18 @@ use serde_json::json;
 use std::path::PathBuf;
 
 #[tauri::command]
-pub fn start_simulation(state: State<'_, Arc<SimulationState>>) {
+pub fn start_simulation(state: State<'_, Arc<SimulationState>>, session_name: Option<String>) {
     let mut is_running = state.is_running.lock().unwrap();
     *is_running = true;
-    println!("Simulation started");
+
+    // Store session name for later use when saving to Supabase
+    if let Some(name) = session_name {
+        let mut session_name_guard = state.session_name.lock().unwrap();
+        *session_name_guard = Some(name.clone());
+        println!("Simulation started with session name: {}", name);
+    } else {
+        println!("Simulation started");
+    }
 }
 
 #[tauri::command]

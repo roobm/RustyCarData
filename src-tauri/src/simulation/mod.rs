@@ -81,12 +81,16 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
                 let start_time = Utc::now().to_rfc3339();
                 session_start_time = Some(start_time.clone());
 
+                // Get session name from state, or use default
+                let session_name = state.session_name.lock().unwrap().clone()
+                    .unwrap_or_else(|| format!("Session {}", Utc::now().format("%Y-%m-%d %H:%M")));
+
                 let session = SessionRow {
                     id: None,
                     created_at: None,
                     started_at: start_time,
                     ended_at: None,
-                    session_name: Some(format!("Session {}", Utc::now().format("%Y-%m-%d %H:%M"))),
+                    session_name: Some(session_name),
                     dataset_source: Some(if mode == SimulationMode::Playback { "playback" } else { "random_walk" }.to_string()),
                     vehicle_make: Some("Toyota".to_string()),
                     vehicle_model: Some("Etios".to_string()),
