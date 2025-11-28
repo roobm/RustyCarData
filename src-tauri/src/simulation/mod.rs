@@ -6,8 +6,6 @@ use tokio::time::sleep;
 use chrono::Utc;
 use uuid::Uuid;
 use crate::models::{ObdPid, TelemetryPoint};
-use crate::storage::manager::SessionManager;
-use crate::storage::writer::ParquetWriter;
 use crate::storage::supabase::{SupabaseClient, SessionRow, TelemetryRow};
 use self::state::{SimulationState, SimulationMode};
 use self::dataset::DatasetLoader;
@@ -18,8 +16,6 @@ pub mod dataset;
 pub mod playback;
 
 pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
-    let session_manager = SessionManager::new(&app);
-    let mut current_writer: Option<ParquetWriter> = None;
     let mut was_running = false;
 
     // Initialize Supabase client
@@ -64,17 +60,7 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
 
         // Handle Start/Stop transitions
         if is_running && !was_running {
-            // Just started
-            let path = session_manager.create_new_session_path();
-            println!("Starting new session recording: {:?}", path);
-            let mut writer = ParquetWriter::new(path);
-            if let Err(e) = writer.init() {
-                eprintln!("Failed to init parquet writer: {}", e);
-            } else {
-                current_writer = Some(writer);
-            }
-
-            // Create Supabase session
+            // Just started - Create Supabase session
             if let Some(ref client) = supabase_client {
                 let mode = *state.mode.lock().unwrap();
                 let dataset_id = state.current_dataset.lock().unwrap().clone();
@@ -131,15 +117,7 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
                 }
             }
         } else if !is_running && was_running {
-            // Just stopped
-            if let Some(mut writer) = current_writer.take() {
-                println!("Stopping session recording");
-                if let Err(e) = writer.close() {
-                    eprintln!("Failed to close parquet writer: {}", e);
-                }
-            }
-
-            // Complete Supabase session
+            // Just stopped - Complete Supabase session
             if let (Some(ref client), Some(session_id), Some(start_time)) =
                 (&supabase_client, current_session_id, &session_start_time) {
                 // Flush any remaining telemetry
@@ -218,15 +196,6 @@ pub async fn run_simulation_loop(app: AppHandle, state: Arc<SimulationState>) {
 
             stats.total_rpm += rpm;
             stats.sample_count += 1;
-        }
-
-        // Write to disk
-        if let Some(writer) = &mut current_writer {
-            for point in &points {
-                if let Err(e) = writer.write_point(point) {
-                    eprintln!("Failed to write point: {}", e);
-                }
-            }
         }
 
         // Buffer telemetry for Supabase
