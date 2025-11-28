@@ -1,4 +1,6 @@
 // Agent module exports
+// Note: Allow dead_code as this infrastructure will be integrated with backend in future phases
+#![allow(dead_code)]
 
 pub mod cache;
 pub mod error;
@@ -9,7 +11,6 @@ pub mod traits;
 pub mod types;
 
 // Re-export commonly used types
-pub use cache::{generate_cache_key, AgentCache};
 pub use error::AgentError;
 pub use orchestrator::AgentOrchestrator;
 pub use registry::AgentRegistry;

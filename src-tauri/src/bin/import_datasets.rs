@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use uuid::Uuid;
 
 // Import from the main library
@@ -12,7 +11,7 @@ struct CsvRow {
     timestamp: u64,
     pid: String,
     value: f64,
-    unit: String,
+    _unit: String, // Keep for CSV parsing, not used in processing
 }
 
 #[tokio::main]

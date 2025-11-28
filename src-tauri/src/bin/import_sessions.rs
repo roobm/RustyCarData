@@ -12,7 +12,7 @@ struct CsvRow {
     timestamp: u64,
     pid: String,
     value: f64,
-    unit: String,
+    _unit: String, // Keep for CSV parsing, not used in processing
 }
 
 #[tokio::main]
