@@ -222,9 +222,213 @@ pub async fn analyze_session_with_agents(
     agent_ids: Vec<String>,
     orchestrator: State<'_, Arc<AgentOrchestrator>>,
 ) -> Result<Vec<AnalysisResult>, String> {
-    // TODO: Load session data from session_id
-    // For now, return error indicating session loading not implemented
-    Err(format!("Session analysis not yet integrated. Session ID: {}, Agents: {:?}", session_id, agent_ids))
+    use crate::agents::types::{AnalysisRequest, VehicleInfo};
+    use chrono::Utc;
+
+    // Load session data from Supabase
+    let session_data = get_supabase_session_data(session_id.clone()).await?;
+
+    // Convert Supabase data to SessionSummary
+    let session_summary = convert_to_session_summary(&session_data)?;
+
+    // Extract vehicle info
+    let vehicle_info = VehicleInfo {
+        make: session_data.session.vehicle_make.clone().unwrap_or_else(|| "Unknown".to_string()),
+        model: session_data.session.vehicle_model.clone().unwrap_or_else(|| "Unknown".to_string()),
+        year: session_data.session.vehicle_year.unwrap_or(2020) as u16,
+        vin: None,
+        engine_type: crate::agents::types::EngineType::GasolineNaturallyAspirated,
+        transmission: crate::agents::types::TransmissionType::Automatic,
+        fuel_type: crate::agents::types::FuelType::Regular87,
+    };
+
+    // Create analysis request
+    let request = AnalysisRequest {
+        request_id: format!("req_{}", Utc::now().timestamp_millis()),
+        session_data: session_summary,
+        vehicle_info,
+        user_preferences: None,
+        historical_context: None,
+        force_local: true, // Force local Ollama processing
+        timeout_seconds: 120, // Give Ollama enough time to respond
+    };
+
+    // Run analysis with orchestrator
+    let results = orchestrator.analyze_session(&request, agent_ids).await;
+
+    // Convert results
+    results
+        .into_iter()
+        .map(|r| r.map_err(|e| e.to_string()))
+        .collect::<Result<Vec<_>, _>>()
+}
+
+/// Convert Supabase session data to SessionSummary
+fn convert_to_session_summary(data: &SessionData) -> Result<crate::agents::types::SessionSummary, String> {
+    use crate::agents::types::{Event, EventType};
+    use chrono::{DateTime, Utc};
+
+    // Parse timestamps
+    let start_time = DateTime::parse_from_rfc3339(&data.session.started_at)
+        .map_err(|e| format!("Invalid start time: {}", e))?
+        .with_timezone(&Utc);
+
+    let end_time = if let Some(ended_at) = &data.session.ended_at {
+        DateTime::parse_from_rfc3339(ended_at)
+            .map_err(|e| format!("Invalid end time: {}", e))?
+            .with_timezone(&Utc)
+    } else {
+        Utc::now()
+    };
+
+    // Calculate statistics from telemetry
+    let telemetry = &data.telemetry;
+    let stats = &data.stats;
+
+    // Calculate derived metrics from telemetry
+    let mut max_speed_mph = 0.0_f32;
+    let mut max_rpm = 0.0_f32;
+    let mut max_coolant_temp_f = 0.0_f32;
+    let mut avg_coolant_temp_sum = 0.0_f64;
+    let mut avg_oil_temp_sum = 0.0_f64;
+    let mut coolant_temp_count = 0;
+    let mut oil_temp_count = 0;
+
+    let mut hard_braking_events = Vec::new();
+    let mut rapid_acceleration_events = Vec::new();
+
+    // Analyze telemetry points
+    let mut prev_speed: Option<f64> = None;
+    for point in telemetry {
+        // Speed
+        if let Some(speed_kmh) = point.vehicle_speed {
+            let speed_mph = (speed_kmh * 0.621371) as f32;
+            max_speed_mph = max_speed_mph.max(speed_mph);
+
+            // Detect hard braking (speed drop > 20 km/h in one sample)
+            if let Some(prev) = prev_speed {
+                let delta = prev - speed_kmh;
+                if delta > 20.0 {
+                    if let Some(ts_str) = &point.timestamp {
+                        if let Ok(timestamp) = DateTime::parse_from_rfc3339(ts_str) {
+                            hard_braking_events.push(Event {
+                                timestamp: timestamp.with_timezone(&Utc),
+                                event_type: EventType::HardBraking,
+                                severity: (delta / 30.0) as f32,
+                                value: delta as f32,
+                                location: None,
+                            });
+                        }
+                    }
+                }
+                // Detect rapid acceleration (speed gain > 15 km/h)
+                if delta < -15.0 {
+                    if let Some(ts_str) = &point.timestamp {
+                        if let Ok(timestamp) = DateTime::parse_from_rfc3339(ts_str) {
+                            rapid_acceleration_events.push(Event {
+                                timestamp: timestamp.with_timezone(&Utc),
+                                event_type: EventType::RapidAcceleration,
+                                severity: (delta.abs() / 20.0) as f32,
+                                value: delta.abs() as f32,
+                                location: None,
+                            });
+                        }
+                    }
+                }
+            }
+            prev_speed = Some(speed_kmh);
+        }
+
+        // RPM
+        if let Some(rpm) = point.engine_rpm {
+            max_rpm = max_rpm.max(rpm as f32);
+        }
+
+        // Coolant temperature (convert from °C to °F)
+        if let Some(temp_c) = point.coolant_temp {
+            let temp_f = temp_c * 1.8 + 32.0;
+            max_coolant_temp_f = max_coolant_temp_f.max(temp_f as f32);
+            avg_coolant_temp_sum += temp_f;
+            coolant_temp_count += 1;
+        }
+
+        // Oil temperature (using intake air temp as proxy if available)
+        if let Some(temp_c) = point.intake_air_temp {
+            let temp_f = temp_c * 1.8 + 32.0;
+            avg_oil_temp_sum += temp_f;
+            oil_temp_count += 1;
+        }
+    }
+
+    let avg_coolant_temp_f = if coolant_temp_count > 0 {
+        (avg_coolant_temp_sum / coolant_temp_count as f64) as f32
+    } else {
+        195.0 // Default normal temp
+    };
+
+    let avg_oil_temp_f = if oil_temp_count > 0 {
+        (avg_oil_temp_sum / oil_temp_count as f64) as f32
+    } else {
+        220.0 // Default normal temp
+    };
+
+    // Use stats if available, otherwise calculate from telemetry
+    let avg_speed_mph = stats.as_ref()
+        .and_then(|s| s.avg_speed)
+        .map(|kmh| (kmh * 0.621371) as f32)
+        .unwrap_or(0.0);
+
+    let avg_rpm = stats.as_ref()
+        .and_then(|s| s.avg_rpm)
+        .map(|r| r as f32)
+        .unwrap_or(2000.0);
+
+    // Calculate distance (convert km to miles)
+    let distance_miles = data.session.distance_km
+        .map(|km| (km * 0.621371) as f32)
+        .unwrap_or(0.0);
+
+    // Calculate fuel consumption (rough estimate: 1L per 10km for city, convert to gallons)
+    let distance_km = data.session.distance_km.unwrap_or(0.0);
+    let fuel_consumed_gallons = stats.as_ref()
+        .and_then(|s| s.fuel_consumed_liters)
+        .map(|liters| (liters * 0.264172) as f32)
+        .unwrap_or_else(|| ((distance_km / 10.0) * 0.264172) as f32);
+
+    let avg_fuel_efficiency_mpg = if fuel_consumed_gallons > 0.0 {
+        distance_miles / fuel_consumed_gallons
+    } else {
+        25.0 // Default MPG
+    };
+
+    // Count high RPM duration (estimate: count points above 5000 RPM, multiply by 0.1s per point)
+    let high_rpm_count = telemetry.iter()
+        .filter(|p| p.engine_rpm.unwrap_or(0.0) > 5000.0)
+        .count();
+    let high_rpm_duration_seconds = (high_rpm_count as f64 * 0.1) as u64;
+
+    Ok(crate::agents::types::SessionSummary {
+        session_id: data.session.id.unwrap().to_string(),
+        start_time,
+        end_time,
+        duration_seconds: data.session.duration_seconds.unwrap_or(0) as u64,
+        distance_miles,
+        fuel_consumed_gallons,
+        avg_fuel_efficiency_mpg,
+        avg_speed_mph,
+        max_speed_mph,
+        speed_violations_count: 0, // TODO: Calculate based on speed limit
+        avg_rpm,
+        max_rpm,
+        high_rpm_duration_seconds,
+        avg_coolant_temp_f,
+        max_coolant_temp_f,
+        avg_oil_temp_f,
+        hard_braking_events,
+        rapid_acceleration_events,
+        error_codes: Vec::new(), // No DTCs in dataset
+        sensor_readings: std::collections::HashMap::new(),
+    })
 }
 
 /// Get agent metadata by ID

@@ -2,6 +2,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+fn default_category() -> String {
+    "general".to_string()
+}
+
 // Agent Metadata & Configuration
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,9 +117,12 @@ pub struct AnalysisResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Insight {
+    #[serde(rename = "type")]
     pub category: InsightCategory,
     pub title: String,
     pub description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
     #[serde(default)]
     pub supporting_data: HashMap<String, serde_json::Value>,
     #[serde(default)]
@@ -123,21 +130,29 @@ pub struct Insight {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum InsightCategory {
+    #[serde(rename = "neutral")]
     Info,
     Warning,
     Critical,
     Positive,
+    Neutral,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Recommendation {
     pub priority: Priority,
     pub action: String,
+    #[serde(rename = "rationale")]
     pub expected_benefit: String,
     pub effort_level: EffortLevel,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub related_insight_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub estimated_impact: Option<String>,
+    #[serde(default = "default_category")]
+    pub category: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]

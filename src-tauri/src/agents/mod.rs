@@ -6,6 +6,7 @@ pub mod cache;
 pub mod error;
 pub mod implementations;
 pub mod orchestrator;
+pub mod providers;
 pub mod registry;
 pub mod traits;
 pub mod types;

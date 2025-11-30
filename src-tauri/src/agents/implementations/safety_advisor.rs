@@ -46,6 +46,7 @@ impl SafetyAdvisorAgent {
     fn generate_insights(&self, request: &AnalysisRequest) -> Vec<Insight> {
         let session = &request.session_data;
         let mut insights = Vec::new();
+        let mut counter = 0;
 
         // Speed violations
         if session.speed_violations_count > 0 {
@@ -56,6 +57,7 @@ impl SafetyAdvisorAgent {
             };
 
             insights.push(Insight {
+                id: Some(format!("safety_insight_{}", counter)),
                 category,
                 title: "Speed Limit Violations Detected".to_string(),
                 description: format!(
@@ -70,11 +72,13 @@ impl SafetyAdvisorAgent {
                 ].iter().cloned().collect(),
                 related_insight_ids: vec![],
             });
+            counter += 1;
         }
 
         // Hard braking events
         if !session.hard_braking_events.is_empty() {
             insights.push(Insight {
+                id: Some(format!("safety_insight_{}", counter)),
                 category: InsightCategory::Warning,
                 title: "Frequent Hard Braking".to_string(),
                 description: format!(
@@ -86,11 +90,13 @@ impl SafetyAdvisorAgent {
                 ].iter().cloned().collect(),
                 related_insight_ids: vec![],
             });
+            counter += 1;
         }
 
         // Rapid acceleration with safety context
         if session.rapid_acceleration_events.len() > 3 {
             insights.push(Insight {
+                id: Some(format!("safety_insight_{}", counter)),
                 category: InsightCategory::Info,
                 title: "Aggressive Acceleration Pattern".to_string(),
                 description: format!(
@@ -102,6 +108,7 @@ impl SafetyAdvisorAgent {
                 ].iter().cloned().collect(),
                 related_insight_ids: vec![],
             });
+            counter += 1;
         }
 
         // Overall safety summary
@@ -115,6 +122,7 @@ impl SafetyAdvisorAgent {
         };
 
         insights.push(Insight {
+            id: Some(format!("safety_insight_{}", counter)),
             category,
             title: "Driving Safety Assessment".to_string(),
             description: format!(
@@ -144,6 +152,8 @@ impl SafetyAdvisorAgent {
                 action: "Strictly observe posted speed limits and adjust speed for conditions".to_string(),
                 expected_benefit: "Reduce crash risk by 5x and improve emergency response time by 40%".to_string(),
                 effort_level: EffortLevel::Easy,
+                category: "safety".to_string(),
+                estimated_impact: Some("Crash risk reduction".to_string()),
                 related_insight_id: None,
             });
         }
@@ -155,6 +165,8 @@ impl SafetyAdvisorAgent {
                 action: "Maintain 3-second following distance (6 seconds in bad weather)".to_string(),
                 expected_benefit: "Reduce rear-end collision risk by 75% and eliminate panic braking".to_string(),
                 effort_level: EffortLevel::Moderate,
+                category: "safety".to_string(),
+                estimated_impact: Some("Collision prevention".to_string()),
                 related_insight_id: None,
             });
         }
@@ -166,6 +178,8 @@ impl SafetyAdvisorAgent {
                 action: "Practice smooth, predictable acceleration and braking".to_string(),
                 expected_benefit: "Improve vehicle control and reduce accident risk by 30%".to_string(),
                 effort_level: EffortLevel::Moderate,
+                category: "safety".to_string(),
+                estimated_impact: Some("Accident risk reduction".to_string()),
                 related_insight_id: None,
             });
         }
@@ -177,6 +191,8 @@ impl SafetyAdvisorAgent {
                 action: "Avoid excessive speeds over 80 mph - risk of fatal crash doubles above 75 mph".to_string(),
                 expected_benefit: "Dramatically reduce fatal crash risk and maintain vehicle stability".to_string(),
                 effort_level: EffortLevel::Easy,
+                category: "safety".to_string(),
+                estimated_impact: Some("Fatal crash risk reduction".to_string()),
                 related_insight_id: None,
             });
         }
@@ -187,6 +203,8 @@ impl SafetyAdvisorAgent {
             action: "Scan 12-15 seconds ahead for potential hazards".to_string(),
             expected_benefit: "Improve hazard detection and reaction time for safer driving".to_string(),
             effort_level: EffortLevel::Moderate,
+            category: "safety".to_string(),
+            estimated_impact: Some("Hazard detection improvement".to_string()),
             related_insight_id: None,
         });
 

@@ -35,6 +35,7 @@ impl AnalysisAgent for MockAgent {
             score: Some(85.0),
             confidence: 0.9,
             insights: vec![Insight {
+                id: Some("mock_insight_1".to_string()),
                 category: InsightCategory::Info,
                 title: format!("Mock insight from {}", self.agent_id),
                 description: format!(
@@ -50,6 +51,8 @@ impl AnalysisAgent for MockAgent {
                 expected_benefit: "Testing the framework".to_string(),
                 effort_level: EffortLevel::Easy,
                 related_insight_id: None,
+                estimated_impact: None,
+                category: "testing".to_string(),
             }],
             execution_time_ms: 100,
             model_used: "mock-v1".to_string(),

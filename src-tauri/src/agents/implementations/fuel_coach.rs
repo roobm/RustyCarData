@@ -46,10 +46,13 @@ impl FuelCoachAgent {
     fn generate_insights(&self, request: &AnalysisRequest) -> Vec<Insight> {
         let session = &request.session_data;
         let mut insights = Vec::new();
+        let mut counter = 0;
 
         // High RPM insight
         if session.avg_rpm > 3000.0 {
+            counter += 1;
             insights.push(Insight {
+                id: Some(format!("fuel_insight_{}", counter)),
                 category: InsightCategory::Warning,
                 title: "High Engine RPM Detected".to_string(),
                 description: format!(
@@ -66,7 +69,9 @@ impl FuelCoachAgent {
 
         // Rapid acceleration insight
         if !session.rapid_acceleration_events.is_empty() {
+            counter += 1;
             insights.push(Insight {
+                id: Some(format!("fuel_insight_{}", counter)),
                 category: InsightCategory::Info,
                 title: "Frequent Rapid Acceleration".to_string(),
                 description: format!(
@@ -90,7 +95,9 @@ impl FuelCoachAgent {
             InsightCategory::Positive
         };
 
+        counter += 1;
         insights.push(Insight {
+            id: Some(format!("fuel_insight_{}", counter)),
             category,
             title: "Fuel Efficiency Analysis".to_string(),
             description: format!(
@@ -123,6 +130,8 @@ impl FuelCoachAgent {
                 expected_benefit: "Reduce fuel consumption by 10-15% on highway driving".to_string(),
                 effort_level: EffortLevel::Easy,
                 related_insight_id: None,
+                estimated_impact: Some("10-15% fuel savings".to_string()),
+                category: "fuel-efficiency".to_string(),
             });
         }
 
@@ -134,6 +143,8 @@ impl FuelCoachAgent {
                 expected_benefit: "Save up to 20% fuel in city driving".to_string(),
                 effort_level: EffortLevel::Easy,
                 related_insight_id: None,
+                estimated_impact: Some("Up to 20% fuel savings".to_string()),
+                category: "fuel-efficiency".to_string(),
             });
         }
 
@@ -145,6 +156,8 @@ impl FuelCoachAgent {
                 expected_benefit: "Improve fuel economy by 7-14% at lower highway speeds".to_string(),
                 effort_level: EffortLevel::Moderate,
                 related_insight_id: None,
+                estimated_impact: Some("7-14% fuel savings".to_string()),
+                category: "fuel-efficiency".to_string(),
             });
         }
 
@@ -155,6 +168,8 @@ impl FuelCoachAgent {
             expected_benefit: "Reduce fuel consumption by 3-7% on long trips".to_string(),
             effort_level: EffortLevel::Easy,
             related_insight_id: None,
+            estimated_impact: Some("3-7% fuel savings".to_string()),
+            category: "fuel-efficiency".to_string(),
         });
 
         recommendations

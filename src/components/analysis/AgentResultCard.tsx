@@ -4,6 +4,28 @@ import React, { useState } from 'react';
 import { AgentAnalysisResult } from '../../types/analysis';
 import { ChevronDown, ChevronUp, AlertCircle, AlertTriangle, CheckCircle, Info, Star } from 'lucide-react';
 
+// Simple markdown formatter for bold text and line breaks
+const formatMarkdown = (text: string) => {
+  // Split by newlines to preserve line breaks
+  return text.split('\n').map((line, idx) => {
+    // Process bold markdown (**text**)
+    const parts = line.split(/(\*\*.*?\*\*)/g);
+    const formatted = parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+
+    return (
+      <React.Fragment key={idx}>
+        {formatted}
+        {idx < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    );
+  });
+};
+
 interface AgentResultCardProps {
   result: AgentAnalysisResult;
   defaultExpanded?: boolean;
@@ -125,9 +147,9 @@ export const AgentResultCard: React.FC<AgentResultCardProps> = ({
                       <h5 className="font-medium text-gray-900 dark:text-white text-sm">
                         {insight.title}
                       </h5>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {insight.description}
-                      </p>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">
+                        {formatMarkdown(insight.description)}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -155,9 +177,9 @@ export const AgentResultCard: React.FC<AgentResultCardProps> = ({
                         {rec.priority}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {rec.rationale}
-                    </p>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                      {formatMarkdown(rec.rationale)}
+                    </div>
                     {rec.estimatedImpact && (
                       <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                         Impact: {rec.estimatedImpact}

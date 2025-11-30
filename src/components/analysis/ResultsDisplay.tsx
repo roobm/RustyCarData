@@ -34,7 +34,16 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     return (
       <div ref={resultsRef} className={`flex flex-col items-center justify-center py-12 ${className}`}>
         <Loader2 className="text-indigo-600 mb-4 animate-spin" size={48} />
-        <p className="text-gray-600 dark:text-gray-400">Analyzing your data...</p>
+        <p className="text-gray-900 dark:text-white font-semibold mb-2">
+          AI is analyzing your data...
+        </p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm text-center max-w-md">
+          Local AI model is processing your telemetry data. This may take 15-30 seconds depending on your hardware.
+        </p>
+        <div className="mt-4 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span>Running locally with Ollama</span>
+        </div>
       </div>
     );
   }
