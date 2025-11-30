@@ -21,44 +21,64 @@
 ## Architecture
 
 ```mermaid
-graph TD
-    subgraph Frontend [React Frontend]
+graph TB
+    subgraph Frontend["🎨 React Frontend"]
         UI[Dashboard UI]
+        Charts[Telemetry Charts]
+        AnalysisUI[AI Analysis Page]
         Store[Zustand Store]
-        Analysis[Analysis Page]
+        
         UI --> Store
-        Analysis --> Store
+        Charts --> Store
+        AnalysisUI --> Store
     end
 
-    subgraph Backend [Rust Backend]
-        Tauri[Tauri Commands]
+    subgraph Backend["⚙️ Rust Backend (Tauri)"]
+        Commands[Tauri Commands]
         Sim[Simulation Engine]
         Rec[Data Recorder]
-        Agents[AI Agents]
-        CAN[CAN Sniffer]
-        
-        Tauri --> Sim
-        Tauri --> Rec
-        Tauri --> Agents
-        Tauri --> CAN
+        Agents[AI Agent System]
+        CAN[CAN Bus Handler]
     end
 
-    subgraph Storage [File System]
-        Datasets[(Datasets CSV)]
-        Sessions[(Sessions CSV)]
-        Exports[(Exports CSV)]
+    subgraph Storage["💾 Local Storage"]
+        Datasets[(OBD-II Datasets)]
+        Sessions[(Session Records)]
+        Exports[(CSV Exports)]
     end
 
-    subgraph Cloud [Cloud Infrastructure]
-        Supabase[(Supabase DB)]
+    subgraph AI["🤖 AI Services"]
+        Ollama[Ollama LLM\nLocal]
+        OpenAI[OpenAI GPT-4\nCloud]
     end
 
-    Store <-->|IPC| Tauri
+    subgraph Cloud["☁️ Cloud Services"]
+        Supabase[(Supabase\nPostgreSQL)]
+    end
+
+    Store <-->|IPC| Commands
+    Commands --> Sim
+    Commands --> Rec
+    Commands --> Agents
+    Commands --> CAN
+    
     Sim -->|Read| Datasets
+    Sim -->|Emit Events| Store
+    CAN -->|Raw Frames| Sim
+    
     Rec -->|Write| Sessions
     Rec -->|Export| Exports
-    Rec -->|Sync| Supabase
+    Rec -.->|Sync| Supabase
+    
     Agents -->|Read| Sessions
+    Agents -->|Analyze| Ollama
+    Agents -.->|Analyze| OpenAI
+    
+    AnalysisUI -->|Request Analysis| Commands
+    
+    style Ollama fill:#10b981
+    style OpenAI fill:#3b82f6
+    style Supabase fill:#3ecf8e
 ```
 
 ## Features
@@ -84,8 +104,9 @@ graph TD
 
 ### 🤖 AI-Powered Analysis
 - **Multi-Agent System**: Safety Coach, Efficiency Advisor, Diagnostics Expert
+- **Dual LLM Support**: Use local Ollama (llama3.2) or cloud OpenAI (GPT-4)
+- **Privacy-First**: Run analysis entirely locally with Ollama, or use OpenAI for advanced insights
 - **Intelligent Insights**: Get actionable recommendations on fuel efficiency, driving safety, and vehicle health
-- **GPT-4 Integration**: Natural language analysis powered by OpenAI
 - **Session Comparison**: Compare multiple driving sessions to track improvement
 
 ### 🎨 Car Animation Widget
@@ -106,6 +127,8 @@ graph TD
 **Backend:**
 - Rust (Tauri 2.0)
 - Supabase (PostgreSQL) for cloud storage
+- Ollama for local LLM inference
+- OpenAI GPT-4 for cloud AI analysis
 - CSV parsing with `csv` crate
 - Flexible dataset loading with automatic PID detection
 - Dual-mode simulation (real data playback + random walk fallback)
@@ -257,6 +280,43 @@ To add your own OBD-II CSV data:
 
 ## ⚙️ Configuration
 
+### AI Provider Setup
+
+The app supports two AI providers for driving analysis:
+
+#### Option 1: Ollama (Local, Free, Private) ⭐ Recommended
+
+1. **Install Ollama**:
+   - macOS/Linux: `curl -fsSL https://ollama.com/install.sh | sh`
+   - Windows: Download from [ollama.com](https://ollama.com/download)
+
+2. **Pull the model**:
+   ```bash
+   ollama pull llama3.2:3b
+   ```
+
+3. **Verify it's running**:
+   ```bash
+   ollama list
+   ```
+
+4. **(Optional) Configure in `.env`**:
+   ```bash
+   OLLAMA_MODEL=llama3.2:3b
+   OLLAMA_TIMEOUT_SECONDS=120
+   ```
+
+✅ **No API key needed!** Analysis runs entirely on your machine.
+
+#### Option 2: OpenAI (Cloud, Paid)
+
+1. Get an API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Add to `.env`:
+   ```bash
+   OPENAI_API_KEY=sk-your-key-here
+   ```
+3. The app will use GPT-4 if Ollama is unavailable or you prefer cloud analysis
+
 ### Supabase Setup (Optional)
 
 To enable cloud storage and multi-device access:
@@ -268,17 +328,6 @@ To enable cloud storage and multi-device access:
    SUPABASE_ANON_KEY=your-anon-key-here
    ```
 3. Restart the app - it will automatically sync sessions
-
-### OpenAI API Key
-
-For AI analysis features:
-
-1. Get an API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Add to `.env`:
-   ```bash
-   OPENAI_API_KEY=sk-your-key-here
-   ```
-3. AI analysis will now work on the Analysis page
 
 ## 🤝 Contributing
 
