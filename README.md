@@ -79,6 +79,7 @@ graph TB
     style Ollama fill:#10b981
     style OpenAI fill:#3b82f6
     style Supabase fill:#3ecf8e
+```
 
 ## Features
 
