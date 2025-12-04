@@ -155,8 +155,10 @@ Driving Events:
     where
         T: for<'de> Deserialize<'de>,
     {
-        // Try to extract JSON from markdown code blocks first
+        // Try multiple extraction strategies
         let json_str = if let Some(json) = Self::extract_json_from_markdown(response) {
+            json
+        } else if let Some(json) = Self::extract_json_object(response) {
             json
         } else {
             response
@@ -165,7 +167,10 @@ Driving Events:
         // Try to parse as JSON
         match serde_json::from_str::<T>(json_str) {
             Ok(parsed) => Ok(ParsedResponse::Structured(parsed)),
-            Err(_) => {
+            Err(e) => {
+                // Log the parsing error for debugging
+                eprintln!("Failed to parse JSON: {}", e);
+                eprintln!("Attempted to parse: {}", &json_str[..json_str.len().min(200)]);
                 // Fallback: return freeform text
                 Ok(ParsedResponse::Freeform(response.to_string()))
             }
@@ -187,6 +192,19 @@ Driving Events:
                 // Check if it looks like JSON
                 if content.starts_with('{') || content.starts_with('[') {
                     return Some(content);
+                }
+            }
+        }
+        None
+    }
+
+    /// Extract JSON object from text (even without code blocks)
+    fn extract_json_object(text: &str) -> Option<&str> {
+        // Find the first { and last } to extract JSON object
+        if let Some(start) = text.find('{') {
+            if let Some(end) = text.rfind('}') {
+                if end > start {
+                    return Some(&text[start..=end]);
                 }
             }
         }
