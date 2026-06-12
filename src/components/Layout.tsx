@@ -19,6 +19,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <h1 className="text-2xl font-bold text-blue-400 flex items-center gap-2">
             RustyAssCarData
           </h1>
+          <p className="mt-1 text-sm text-gray-400">hi</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
